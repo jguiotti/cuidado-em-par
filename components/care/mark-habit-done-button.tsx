@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import {
-  markHabitDoneAction,
-  unmarkHabitDoneAction,
+  markContentDoneAction,
+  unmarkContentDoneAction,
 } from "@/app/actions/safe-content";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -13,11 +13,13 @@ import { appCopy } from "@/lib/i18n/app-pt-br";
 
 interface MarkHabitDoneButtonProps {
   kind: "workout" | "meal";
+  contentId: string;
   initiallyDone: boolean;
 }
 
 export function MarkHabitDoneButton({
   kind,
+  contentId,
   initiallyDone,
 }: MarkHabitDoneButtonProps) {
   const router = useRouter();
@@ -33,8 +35,8 @@ export function MarkHabitDoneButton({
     setMessage(null);
     startTransition(async () => {
       const result = done
-        ? await unmarkHabitDoneAction(kind)
-        : await markHabitDoneAction(kind);
+        ? await unmarkContentDoneAction(kind, contentId)
+        : await markContentDoneAction(kind, contentId);
 
       if (!result.ok) {
         setError(appCopy.habit.genericError);

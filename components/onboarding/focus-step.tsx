@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 
 import { updateFocusAction } from "@/app/actions/onboarding";
+import { IconArrowRight, IconLeaf, IconShield } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
 import {
   ChoiceCard,
@@ -98,10 +99,11 @@ export function FocusStep({ initialHealthFocus = null }: FocusStepProps) {
         current={3}
         total={ONBOARDING_TOTAL_STEPS}
         label={onboardingCopy.progressLabel(3, ONBOARDING_TOTAL_STEPS)}
+        phaseLabel={onboardingCopy.focus.phaseLabel}
       />
 
       <div className="space-y-3">
-        <h1 className="text-3xl font-bold text-ink">
+        <h1 className="text-3xl font-bold leading-tight text-ink">
           {onboardingCopy.focus.title}
         </h1>
         <p className="text-base leading-relaxed text-ink-soft">
@@ -116,16 +118,35 @@ export function FocusStep({ initialHealthFocus = null }: FocusStepProps) {
             name="healthFocus"
             value={value}
             label={onboardingCopy.healthFocusLabels[value]}
-            description={
-              value === "body-composition"
-                ? onboardingCopy.focus.bodyCompositionHint
-                : undefined
-            }
+            description={onboardingCopy.healthFocusDescriptions[value]}
             selected={healthFocus === value}
             onSelect={() => setHealthFocus(value)}
           />
         ))}
       </ChoiceCardGroup>
+
+      <Surface className="flex items-start gap-3 p-4">
+        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mint text-mint-deep">
+          <IconLeaf size={20} />
+        </span>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-mint-deep">
+            {onboardingCopy.focus.tipTitle}
+          </p>
+          <p className="text-sm leading-relaxed text-ink-soft">
+            {onboardingCopy.focus.tipBody}
+          </p>
+        </div>
+      </Surface>
+
+      <div className="flex items-start gap-3 rounded-[var(--radius-soft)] bg-blush px-4 py-3">
+        <span className="mt-0.5 text-blush-deep">
+          <IconShield size={18} />
+        </span>
+        <p className="text-sm leading-relaxed text-ink">
+          {onboardingCopy.focus.privacyNote}
+        </p>
+      </div>
 
       <Surface raised className="flex flex-col gap-4">
         <div className="space-y-1">
@@ -160,8 +181,13 @@ export function FocusStep({ initialHealthFocus = null }: FocusStepProps) {
 
       {error ? <InlineAlert tone="error">{error}</InlineAlert> : null}
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Salvando..." : onboardingCopy.focus.cta}
+      <Button
+        type="submit"
+        disabled={isPending}
+        className="min-h-14 w-full gap-2 rounded-[var(--radius-pill)]"
+      >
+        {isPending ? onboardingCopy.saving : onboardingCopy.focus.cta}
+        {!isPending ? <IconArrowRight size={18} /> : null}
       </Button>
     </form>
   );

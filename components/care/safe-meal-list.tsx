@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import type { SafeMealCard } from "@/app/actions/safe-content";
+import { MarkHabitDoneButton } from "@/components/care/mark-habit-done-button";
 import { adminCopy } from "@/lib/i18n/admin-pt-br";
 import { appCopy } from "@/lib/i18n/app-pt-br";
 import { MEAL_SLOT_VALUES, type MealSlot } from "@/lib/tags/constants";
@@ -9,10 +10,27 @@ import { MEAL_SLOT_LABELS_PT_BR } from "@/lib/tags/labels";
 interface SafeMealListProps {
   items: SafeMealCard[];
   activeSlot: MealSlot | "all";
+  doneIds?: ReadonlySet<string> | string[];
+  emptyMessage?: string;
 }
 
-export function SafeMealList({ items, activeSlot }: SafeMealListProps) {
+function toDoneSet(
+  doneIds: ReadonlySet<string> | string[] | undefined,
+): Set<string> {
+  if (!doneIds) {
+    return new Set();
+  }
+  return doneIds instanceof Set ? doneIds : new Set(doneIds);
+}
+
+export function SafeMealList({
+  items,
+  activeSlot,
+  doneIds,
+  emptyMessage,
+}: SafeMealListProps) {
   const filters: Array<MealSlot | "all"> = ["all", ...MEAL_SLOT_VALUES];
+  const doneSet = toDoneSet(doneIds);
 
   return (
     <div className="flex flex-col gap-5">
@@ -49,7 +67,7 @@ export function SafeMealList({ items, activeSlot }: SafeMealListProps) {
       {items.length === 0 ? (
         <div className="surface p-6">
           <p className="text-base leading-relaxed text-ink-soft">
-            {appCopy.eat.empty}
+            {emptyMessage ?? appCopy.eat.empty}
           </p>
         </div>
       ) : (
@@ -97,6 +115,11 @@ export function SafeMealList({ items, activeSlot }: SafeMealListProps) {
                   </ul>
                 </div>
               ) : null}
+              <MarkHabitDoneButton
+                kind="meal"
+                contentId={meal.id}
+                initiallyDone={doneSet.has(meal.id)}
+              />
             </li>
           ))}
         </ul>

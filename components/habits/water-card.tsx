@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { logWaterAction } from "@/app/actions/habits";
+import { IconHabits } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
+import { HabitRing } from "@/components/ui/habit-ring";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Surface } from "@/components/ui/surface";
 import { habitsCopy } from "@/lib/i18n/habits-pt-br";
@@ -13,9 +15,14 @@ import { WATER_DELTA_OPTIONS } from "@/lib/habits/water";
 interface WaterCardProps {
   waterMl: number;
   waterGoalMl: number;
+  compact?: boolean;
 }
 
-export function WaterCard({ waterMl, waterGoalMl }: WaterCardProps) {
+export function WaterCard({
+  waterMl,
+  waterGoalMl,
+  compact = false,
+}: WaterCardProps) {
   const router = useRouter();
   const [total, setTotal] = useState(waterMl);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +44,35 @@ export function WaterCard({ waterMl, waterGoalMl }: WaterCardProps) {
     });
   }
 
+  if (compact) {
+    return (
+      <Surface className="space-y-4 p-5">
+        <HabitRing
+          progress={progress}
+          label={habitsCopy.water.ringLabel}
+          detail={habitsCopy.water.ringDetail(total, waterGoalMl)}
+        >
+          <IconHabits size={22} />
+        </HabitRing>
+        <div className="flex flex-wrap gap-2">
+          {WATER_DELTA_OPTIONS.map((delta) => (
+            <Button
+              key={delta}
+              type="button"
+              variant="secondary"
+              disabled={isPending}
+              onClick={() => handleAdd(delta)}
+              className="min-h-11 flex-1 rounded-[var(--radius-pill)] bg-mint text-ink"
+            >
+              {habitsCopy.water.add(delta)}
+            </Button>
+          ))}
+        </div>
+        {error ? <InlineAlert tone="error">{error}</InlineAlert> : null}
+      </Surface>
+    );
+  }
+
   return (
     <Surface className="space-y-4">
       <div className="flex items-start justify-between gap-3">
@@ -55,23 +91,13 @@ export function WaterCard({ waterMl, waterGoalMl }: WaterCardProps) {
         </span>
       </div>
 
-      <p className="text-base font-semibold text-ink" aria-live="polite">
-        {habitsCopy.water.total(total)}
-      </p>
-
-      <div
-        className="h-3 overflow-hidden rounded-full bg-surface-raised"
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label={habitsCopy.water.progressLabel}
+      <HabitRing
+        progress={progress}
+        label={habitsCopy.water.ringLabel}
+        detail={habitsCopy.water.ringDetail(total, waterGoalMl)}
       >
-        <div
-          className="h-full rounded-full bg-mint-deep transition-[width]"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
+        <IconHabits size={22} />
+      </HabitRing>
 
       <div className="flex flex-wrap gap-2">
         {WATER_DELTA_OPTIONS.map((delta) => (

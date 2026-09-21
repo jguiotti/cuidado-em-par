@@ -1,0 +1,51 @@
+export const circleCopy = {
+  title: "Círculo",
+  support: "Constância em companhia, sem comparar corpo.",
+  privacy:
+    "Quem está no círculo vê se você registrou água, descanso, pausa, movimento ou refeição — sem detalhes de saúde.",
+  emptyTitle: "Cuidar em companhia",
+  emptySupport:
+    "Crie uma dupla ou um grupo, ou entre com um código. Vocês acompanham só o cuidado do dia.",
+  createPair: "Criar dupla",
+  createGroup: "Criar grupo",
+  createPairNameLabel: "Nome da dupla (opcional)",
+  createGroupNameLabel: "Nome do grupo (opcional)",
+  groupSupport:
+    "Até 8 pessoas. Mesma privacidade da dupla: só o cuidado do dia, sem detalhes de saúde.",
+  pairSupport: "Duas pessoas. Constância leve, sem comparar corpo.",
+  join: "Entrar com código",
+  joinCodeLabel: "Código do convite",
+  codeLabel: "Código do convite",
+  copyCode: "Copiar código",
+  copied: "Código copiado.",
+  waiting:
+    "Compartilhe o código. Quando alguém entrar, o cuidado do dia aparece aqui.",
+  members: "Quem está no círculo",
+  membersCount: (n: number, max: number) => `${n} de ${max} pessoas`,
+  kindPair: "Dupla",
+  kindGroup: "Grupo",
+  today: "Cuidado de hoje",
+  history: "Últimos dias",
+  dayEmpty: "Ainda sem registros neste dia.",
+  leave: "Sair do círculo",
+  leaveConfirm:
+    "Sair do círculo? O histórico compartilhado deixa de aparecer para você.",
+  leaveCta: "Confirmar saída",
+  cancel: "Cancelar",
+  kinds: {
+    water: "Água",
+    sleep: "Descanso",
+    "active-pause": "Pausa",
+    workout: "Movimento",
+    meal: "Refeição",
+  },
+  errors: {
+    generic: "Não foi possível concluir agora. Tente de novo.",
+    invalid_invite: "Código não encontrado.",
+    pair_full: "Esta dupla já está completa.",
+    group_full: "Este grupo já está completo.",
+    already_in_circle: "Você já está em um círculo.",
+    load: "Não foi possível carregar o círculo agora.",
+  },
+  you: "Você",
+} as const;

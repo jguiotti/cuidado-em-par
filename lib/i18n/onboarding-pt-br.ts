@@ -17,7 +17,7 @@ export const onboardingCopy = {
       "Li e aceito os termos de uso e a política de privacidade.",
     healthLabel:
       "Autorizo o uso dos meus dados de saúde para sugerir treinos e refeições compatíveis com o meu contexto.",
-    privacyLink: "Ler resumo de privacidade",
+    privacyLink: "Ler política de privacidade e tratamento de dados",
     cta: "Continuar",
     errorBothRequired:
       "Para seguir, é preciso aceitar os dois itens. São eles que protegem você e deixam claro o que fazemos com os dados.",
@@ -35,11 +35,17 @@ export const onboardingCopy = {
     errorName: "Informe como podemos te chamar (pelo menos 2 caracteres).",
   },
   focus: {
-    title: "Qual o seu foco de cuidado agora?",
+    title: "Qual o seu foco principal de saúde agora?",
     support:
-      "Escolha o que faz mais sentido neste momento. Dá para mudar depois.",
+      "Escolha a direção que mais faz sentido hoje. Dá para ajustar depois.",
+    phaseLabel: "Orientação inicial",
+    tipTitle: "Adaptação contínua",
+    tipBody:
+      "O ritmo se molda à sua rotina, preservando articulações e sem cobrança estética.",
+    privacyNote:
+      "Seus dados de saúde não são compartilhados no círculo e servem para filtrar movimentos e refeições seguros para o seu perfil.",
     bodyCompositionHint:
-      "Sem ranking e sem cobrança estética — só para alinhar sugestões.",
+      "Sem contagem punitiva nem padrões inatingíveis. Foco em energia e nutrição acessível.",
     weightTitle: "Peso (opcional)",
     weightSupport:
       "Usamos só para sugerir uma meta de água. Você pode pular.",
@@ -177,8 +183,18 @@ export const onboardingCopy = {
   },
   healthFocusLabels: {
     "quality-of-life": "Qualidade de vida",
-    "physical-preparation": "Preparo físico",
-    maintenance: "Manutenção",
-    "body-composition": "Composição corporal",
+    "physical-preparation": "Preparo físico e calistenia",
+    maintenance: "Manutenção e saúde preventiva",
+    "body-composition": "Composição corporal consciente",
+  } satisfies Record<HealthFocus, string>,
+  healthFocusDescriptions: {
+    "quality-of-life":
+      "Constância leve, bem-estar diário, mobilidade e redução do estresse.",
+    "physical-preparation":
+      "Fortalecimento com o peso do próprio corpo, tônus e autonomia de movimento.",
+    maintenance:
+      "Proteção articular e acompanhamento preventivo sem sobrecarga.",
+    "body-composition":
+      "Sem contagem punitiva nem padrões inatingíveis. Foco em energia e nutrição acessível.",
   } satisfies Record<HealthFocus, string>,
 } as const;

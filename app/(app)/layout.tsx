@@ -1,64 +1,18 @@
 import Link from "next/link";
 
-import { SignOutButton } from "@/components/auth/sign-out-button";
-import { appCopy } from "@/lib/i18n/app-pt-br";
-import { createClient } from "@/lib/supabase/server";
+import { AppBottomNav } from "@/components/layout/app-bottom-nav";
+import { RegisterServiceWorker } from "@/components/pwa/register-service-worker";
 
-const appNav = [
-  { href: "/home", label: appCopy.nav.home },
-  { href: "/workouts", label: appCopy.nav.move },
-  { href: "/meals", label: appCopy.nav.eat },
-  { href: "/habits", label: appCopy.nav.habits },
-  { href: "/circle", label: appCopy.nav.circle },
-  { href: "/account", label: appCopy.nav.account },
-] as const;
-
-export default async function AppLayout({
+export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = user
-    ? await supabase
-        .from("user_profiles")
-        .select("display_name")
-        .eq("id", user.id)
-        .maybeSingle()
-    : { data: null };
-
-  const greetingName = profile?.display_name?.trim() || "você";
-
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6">
-      <header className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-mint-deep">Cuidado em Par</p>
-          <p className="text-base text-ink-soft">Olá, {greetingName}</p>
-        </div>
-        <SignOutButton />
-      </header>
-
-      <nav
-        aria-label="Navegação principal"
-        className="mb-8 flex gap-2 overflow-x-auto pb-1"
-      >
-        {appNav.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="focus-ring shrink-0 rounded-[var(--radius-soft)] bg-surface-raised px-3 py-2 text-sm font-medium text-ink"
-          >
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 pb-28 pt-5 sm:px-6">
+      <RegisterServiceWorker />
       <div className="flex flex-1 flex-col">{children}</div>
+      <AppBottomNav />
     </div>
   );
 }

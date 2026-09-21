@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { adminCopy } from "@/lib/i18n/admin-pt-br";
 import { createClient } from "@/lib/supabase/server";
 
@@ -31,13 +32,15 @@ export default async function AdminLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 py-6 sm:px-6">
-      <header className="mb-6 space-y-1">
-        <p className="text-sm font-semibold text-blush-deep">Backoffice</p>
-        <h1 className="text-2xl font-bold text-ink">Cuidado em Par</h1>
-        <p className="text-sm text-ink-soft">
-          Área interna de conteúdo. Sem acesso a dados de saúde de quem usa o
-          app.
-        </p>
+      <header className="mb-6 space-y-3">
+        <BrandLogo variant="header" href="/admin" />
+        <div className="space-y-1">
+          <p className="text-sm font-semibold text-blush-deep">Backoffice</p>
+          <p className="text-sm text-ink-soft">
+            Área interna de conteúdo. Sem acesso a dados de saúde de quem usa o
+            app.
+          </p>
+        </div>
       </header>
 
       <nav aria-label="Navegação do backoffice" className="mb-8 flex flex-wrap gap-2">

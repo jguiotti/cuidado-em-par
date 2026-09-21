@@ -1,11 +1,83 @@
-/* Minimal service worker for local habit reminders.
- * Do not cache health/habit payloads. */
+/* Shell-only service worker: local reminders + static asset cache.
+ * Never cache health, habit, account, or Supabase payloads. */
+
+const SHELL_CACHE = "cep-shell-v1";
+const PRECACHE_URLS = [
+  "/manifest.webmanifest",
+  "/icons/icon.svg",
+  "/icons/icon.png",
+  "/icons/icon-maskable.svg",
+  "/icons/icon-maskable.png",
+  "/brand/mark.png",
+];
+
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches
+      .open(SHELL_CACHE)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== SHELL_CACHE)
+            .map((key) => caches.delete(key)),
+        ),
+      )
+      .then(() => self.clients.claim()),
+  );
+});
+
+function isShellAsset(url) {
+  return (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname === "/manifest.webmanifest" ||
+    url.pathname === "/sw.js"
+  );
+}
+
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET") {
+    return;
+  }
+
+  let url;
+  try {
+    url = new URL(request.url);
+  } catch {
+    return;
+  }
+
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (!isShellAsset(url)) {
+    return;
+  }
+
+  event.respondWith(
+    caches.open(SHELL_CACHE).then(async (cache) => {
+      const cached = await cache.match(request);
+      if (cached) {
+        return cached;
+      }
+      const response = await fetch(request);
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    }),
+  );
 });
 
 self.addEventListener("message", (event) => {

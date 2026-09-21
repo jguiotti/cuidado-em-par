@@ -8,6 +8,7 @@ import {
   parseMealIngredients,
   type MealIngredient,
 } from "@/lib/admin/meal-tags";
+import { syncCareEventsForUserDay } from "@/lib/care/publish";
 import { todayInSaoPaulo } from "@/lib/habits/day";
 import { MEAL_SLOT_VALUES, type MealSlot } from "@/lib/tags/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -139,9 +140,20 @@ export async function listSafeMealsForMeAction(
   return { ok: true, items };
 }
 
-export async function getHabitDoneTodayAction(
+export type ContentDoneIdsResult =
+  | { ok: true; contentIds: string[]; count: number }
+  | { ok: false; code: string };
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function isContentUuid(value: string): boolean {
+  return UUID_RE.test(value);
+}
+
+export async function listContentDoneTodayAction(
   kind: "workout" | "meal",
-): Promise<HabitDoneResult> {
+): Promise<ContentDoneIdsResult> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -154,22 +166,27 @@ export async function getHabitDoneTodayAction(
   const day = todayInSaoPaulo();
   const { data, error } = await supabase
     .from("habit_logs")
-    .select("id")
+    .select("content_id")
     .eq("user_id", user.id)
     .eq("day", day)
     .eq("kind", kind)
-    .maybeSingle();
+    .not("content_id", "is", null);
 
   if (error) {
-    console.error("getHabitDoneTodayAction", error.message);
+    console.error("listContentDoneTodayAction", error.message);
     return { ok: false, code: "load_failed" };
   }
 
-  return { ok: true, done: Boolean(data) };
+  const contentIds = (data ?? [])
+    .map((row) => row.content_id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+
+  return { ok: true, contentIds, count: contentIds.length };
 }
 
-export async function markHabitDoneAction(
+export async function markContentDoneAction(
   kind: "workout" | "meal",
+  contentId: string,
 ): Promise<HabitDoneResult> {
   const supabase = await createClient();
   const {
@@ -178,6 +195,10 @@ export async function markHabitDoneAction(
 
   if (!user) {
     return { ok: false, code: "unauthenticated" };
+  }
+
+  if (!isContentUuid(contentId)) {
+    return { ok: false, code: "invalid_content" };
   }
 
   const day = todayInSaoPaulo();
@@ -187,22 +208,33 @@ export async function markHabitDoneAction(
       day,
       kind,
       value: 1,
+      sleep_quality: null,
+      content_id: contentId,
+      content_key: contentId,
     },
-    { onConflict: "user_id,day,kind" },
+    { onConflict: "user_id,day,kind,content_key" },
   );
 
   if (error) {
-    console.error("markHabitDoneAction", error.message);
+    console.error("markContentDoneAction", error.message);
     return { ok: false, code: "save_failed" };
+  }
+
+  try {
+    await syncCareEventsForUserDay(supabase, user.id);
+  } catch (syncError) {
+    console.error("markContentDoneAction sync", syncError);
   }
 
   revalidatePath(kind === "workout" ? "/workouts" : "/meals");
   revalidatePath("/home");
+  revalidatePath("/circle");
   return { ok: true, done: true };
 }
 
-export async function unmarkHabitDoneAction(
+export async function unmarkContentDoneAction(
   kind: "workout" | "meal",
+  contentId: string,
 ): Promise<HabitDoneResult> {
   const supabase = await createClient();
   const {
@@ -213,20 +245,32 @@ export async function unmarkHabitDoneAction(
     return { ok: false, code: "unauthenticated" };
   }
 
+  if (!isContentUuid(contentId)) {
+    return { ok: false, code: "invalid_content" };
+  }
+
   const day = todayInSaoPaulo();
   const { error } = await supabase
     .from("habit_logs")
     .delete()
     .eq("user_id", user.id)
     .eq("day", day)
-    .eq("kind", kind);
+    .eq("kind", kind)
+    .eq("content_id", contentId);
 
   if (error) {
-    console.error("unmarkHabitDoneAction", error.message);
+    console.error("unmarkContentDoneAction", error.message);
     return { ok: false, code: "save_failed" };
+  }
+
+  try {
+    await syncCareEventsForUserDay(supabase, user.id);
+  } catch (syncError) {
+    console.error("unmarkContentDoneAction sync", syncError);
   }
 
   revalidatePath(kind === "workout" ? "/workouts" : "/meals");
   revalidatePath("/home");
+  revalidatePath("/circle");
   return { ok: true, done: false };
 }

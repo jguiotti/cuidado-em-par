@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { resolveExerciseImageSrc } from "@/lib/admin/exercise-illustration";
+import { syncCareEventsForUserDay } from "@/lib/care/publish";
 import { todayInSaoPaulo } from "@/lib/habits/day";
 import {
   isValidSleepInput,
@@ -29,6 +30,7 @@ function revalidateHabits() {
   revalidatePath("/habits");
   revalidatePath("/workouts");
   revalidatePath("/meals");
+  revalidatePath("/circle");
 }
 
 async function requireUser() {
@@ -37,6 +39,17 @@ async function requireUser() {
     data: { user },
   } = await supabase.auth.getUser();
   return { supabase, user };
+}
+
+async function syncCareAfterHabit(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  try {
+    await syncCareEventsForUserDay(supabase, userId);
+  } catch (error) {
+    console.error("syncCareAfterHabit", error);
+  }
 }
 
 function mapPrefs(row: {
@@ -103,7 +116,7 @@ export async function getTodayRitualAction(): Promise<
       .maybeSingle(),
     supabase
       .from("habit_logs")
-      .select("kind, value, sleep_quality")
+      .select("kind, value, sleep_quality, content_id")
       .eq("user_id", user.id)
       .eq("day", day),
     hasRemindersConsent(supabase, user.id),
@@ -124,8 +137,8 @@ export async function getTodayRitualAction(): Promise<
   let waterMl = 0;
   let sleep: SleepLogSnapshot | null = null;
   let activePauseDone = false;
-  let workoutDone = false;
-  let mealDone = false;
+  let workoutCount = 0;
+  let mealCount = 0;
 
   for (const log of logs) {
     if (log.kind === "water") {
@@ -141,9 +154,9 @@ export async function getTodayRitualAction(): Promise<
     } else if (log.kind === "active-pause") {
       activePauseDone = true;
     } else if (log.kind === "workout") {
-      workoutDone = true;
+      workoutCount += 1;
     } else if (log.kind === "meal") {
-      mealDone = true;
+      mealCount += 1;
     }
   }
 
@@ -156,8 +169,10 @@ export async function getTodayRitualAction(): Promise<
       waterGoalMl: prefs.waterGoalMl,
       sleep,
       activePauseDone,
-      workoutDone,
-      mealDone,
+      workoutDone: workoutCount > 0,
+      mealDone: mealCount > 0,
+      workoutCount,
+      mealCount,
       hasRemindersConsent: consent,
     },
   };
@@ -182,6 +197,7 @@ export async function logWaterAction(
     .eq("user_id", user.id)
     .eq("day", day)
     .eq("kind", "water")
+    .eq("content_key", "")
     .maybeSingle();
 
   if (readError) {
@@ -199,8 +215,10 @@ export async function logWaterAction(
       kind: "water",
       value: waterMl,
       sleep_quality: null,
+      content_id: null,
+      content_key: "",
     },
-    { onConflict: "user_id,day,kind" },
+    { onConflict: "user_id,day,kind,content_key" },
   );
 
   if (error) {
@@ -208,6 +226,7 @@ export async function logWaterAction(
     return { ok: false, code: "save_failed" };
   }
 
+  await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
   return { ok: true, data: { waterMl } };
 }
@@ -230,8 +249,10 @@ export async function setWaterTotalAction(
       kind: "water",
       value: waterMl,
       sleep_quality: null,
+      content_id: null,
+      content_key: "",
     },
-    { onConflict: "user_id,day,kind" },
+    { onConflict: "user_id,day,kind,content_key" },
   );
 
   if (error) {
@@ -239,6 +260,7 @@ export async function setWaterTotalAction(
     return { ok: false, code: "save_failed" };
   }
 
+  await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
   return { ok: true, data: { waterMl } };
 }
@@ -267,8 +289,10 @@ export async function logSleepAction(input: {
       kind: "sleep",
       value: minutes,
       sleep_quality: quality,
+      content_id: null,
+      content_key: "",
     },
-    { onConflict: "user_id,day,kind" },
+    { onConflict: "user_id,day,kind,content_key" },
   );
 
   if (error) {
@@ -276,6 +300,7 @@ export async function logSleepAction(input: {
     return { ok: false, code: "save_failed" };
   }
 
+  await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
   return { ok: true };
 }
@@ -296,8 +321,10 @@ export async function markActivePauseDoneAction(): Promise<
       kind: "active-pause",
       value: 1,
       sleep_quality: null,
+      content_id: null,
+      content_key: "",
     },
-    { onConflict: "user_id,day,kind" },
+    { onConflict: "user_id,day,kind,content_key" },
   );
 
   if (error) {
@@ -305,6 +332,7 @@ export async function markActivePauseDoneAction(): Promise<
     return { ok: false, code: "save_failed" };
   }
 
+  await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
   return { ok: true, data: { done: true } };
 }
@@ -330,6 +358,7 @@ export async function unmarkActivePauseDoneAction(): Promise<
     return { ok: false, code: "save_failed" };
   }
 
+  await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
   return { ok: true, data: { done: false } };
 }

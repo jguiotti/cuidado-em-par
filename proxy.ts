@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { updateSession } from "@/lib/supabase/middleware";
 
-const publicPaths = new Set(["/", "/login", "/terms"]);
+const publicPaths = new Set(["/", "/login", "/terms", "/dev/login"]);
 
 function isPublicPath(pathname: string) {
   if (publicPaths.has(pathname)) {
@@ -40,6 +40,15 @@ export async function proxy(request: NextRequest) {
       redirectUrl.pathname = "/home";
       return NextResponse.redirect(redirectUrl);
     }
+    return response;
+  }
+
+  // PWA shell assets must stay reachable without auth redirects.
+  if (
+    pathname === "/manifest.webmanifest" ||
+    pathname === "/sw.js" ||
+    pathname.startsWith("/icons/")
+  ) {
     return response;
   }
 

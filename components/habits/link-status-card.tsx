@@ -5,12 +5,13 @@ import { habitsCopy } from "@/lib/i18n/habits-pt-br";
 
 interface LinkStatusCardProps {
   kind: "move" | "eat";
-  done: boolean;
+  count: number;
 }
 
-export function LinkStatusCard({ kind, done }: LinkStatusCardProps) {
+export function LinkStatusCard({ kind, count }: LinkStatusCardProps) {
   const copy = kind === "move" ? habitsCopy.move : habitsCopy.eat;
   const href = kind === "move" ? "/workouts" : "/meals";
+  const done = count > 0;
 
   return (
     <Surface className="space-y-3">
@@ -21,7 +22,7 @@ export function LinkStatusCard({ kind, done }: LinkStatusCardProps) {
         </span>
       </div>
       <p className="text-sm leading-relaxed text-ink-soft">
-        {done ? copy.done : copy.pending}
+        {done ? copy.done(count) : copy.pending}
       </p>
       <Link
         href={href}

@@ -32,6 +32,8 @@ export interface TodayRitualSnapshot {
   activePauseDone: boolean;
   workoutDone: boolean;
   mealDone: boolean;
+  workoutCount: number;
+  mealCount: number;
   hasRemindersConsent: boolean;
 }
 

@@ -1,0 +1,32 @@
+{
+  "name": "Cuidado em Par",
+  "short_name": "Cuidado",
+  "description": "Saúde preventiva acessível, com cuidado seguro para o seu contexto.",
+  "start_url": "/home",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f3ee",
+  "theme_color": "#4A7C6E",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/icons/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

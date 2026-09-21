@@ -2,11 +2,27 @@
 
 import { useState, useTransition, type FormEvent } from "react";
 
+import { IconArrowRight, IconMail } from "@/components/brand/soft-icons";
+import { Button } from "@/components/ui/button";
 import { MissingEnvError } from "@/lib/env";
+import { loginCopy } from "@/lib/i18n/brand-pt-br";
 import { createClient } from "@/lib/supabase/client";
 
 interface LoginFormProps {
   nextPath: string;
+}
+
+function isRateLimited(error: { status?: number; message?: string; code?: string }) {
+  if (error.status === 429) {
+    return true;
+  }
+  const haystack = `${error.message ?? ""} ${error.code ?? ""}`.toLowerCase();
+  return (
+    haystack.includes("429") ||
+    haystack.includes("rate") ||
+    haystack.includes("too many") ||
+    haystack.includes("over_email_send_rate_limit")
+  );
 }
 
 export function LoginForm({ nextPath }: LoginFormProps) {
@@ -35,25 +51,21 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         if (error) {
           setHasError(true);
           setMessage(
-            "Não foi possível enviar o link agora. Confira o e-mail e tente de novo.",
+            isRateLimited(error)
+              ? loginCopy.rateLimitError
+              : loginCopy.sendError,
           );
           return;
         }
 
-        setMessage(
-          "Se o e-mail estiver correto, você receberá um link de acesso em instantes.",
-        );
+        setMessage(loginCopy.sendOk);
       } catch (error) {
         setHasError(true);
         if (error instanceof MissingEnvError) {
-          setMessage(
-            "Falta configurar o arquivo .env com a URL e a chave anon do Supabase. Depois reinicie o npm run dev.",
-          );
+          setMessage(loginCopy.envError);
           return;
         }
-        setMessage(
-          "Não foi possível enviar o link agora. Confira o e-mail e tente de novo.",
-        );
+        setMessage(loginCopy.sendError);
       }
     });
   }
@@ -61,27 +73,37 @@ export function LoginForm({ nextPath }: LoginFormProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-        E-mail
-        <input
-          type="email"
-          name="email"
-          autoComplete="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          className="field-control min-h-12 px-4 text-base text-ink"
-          placeholder="seu@email.com"
-          disabled={isPending}
-        />
+        {loginCopy.emailLabel}
+        <span className="relative">
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
+            <IconMail size={18} />
+          </span>
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
+            placeholder={loginCopy.emailPlaceholder}
+            disabled={isPending}
+          />
+        </span>
       </label>
 
-      <button
+      <Button
         type="submit"
         disabled={isPending}
-        className="focus-ring inline-flex min-h-12 items-center justify-center rounded-[var(--radius-soft)] bg-mint-deep px-5 text-base font-semibold text-surface transition hover:opacity-90 disabled:opacity-60"
+        className="min-h-14 gap-2 rounded-[var(--radius-pill)] shadow-[0_10px_28px_color-mix(in_srgb,var(--color-mint-deep)_35%,transparent)]"
       >
-        {isPending ? "Enviando..." : "Receber link de acesso"}
-      </button>
+        {isPending ? loginCopy.submitting : loginCopy.submit}
+        {!isPending ? <IconArrowRight size={18} /> : null}
+      </Button>
+
+      <p className="text-center text-sm font-medium text-mint-deep">
+        {loginCopy.firstAccess}
+      </p>
 
       {message ? (
         <p

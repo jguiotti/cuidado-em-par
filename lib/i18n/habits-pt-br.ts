@@ -1,17 +1,50 @@
 export const habitsCopy = {
-  navToday: "Hoje",
+  navToday: "Início",
   home: {
-    title: "Seu cuidado de hoje",
+    title: "Início",
+    greeting: "Olá. Como está seu corpo hoje?",
     support:
-      "Constância leve: água, descanso, pausa, movimento e refeição.",
+      "Espaço calmo para constância: água, descanso, pausa, movimento e refeição — no seu ritmo.",
+    dateLabel: (isoDay: string) => {
+      const [y, m, d] = isoDay.split("-").map(Number);
+      if (!y || !m || !d) {
+        return isoDay;
+      }
+      return new Intl.DateTimeFormat("pt-BR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      }).format(new Date(Date.UTC(y, m - 1, d, 12)));
+    },
+    safetyPill: "Filtros seguros ativos",
+    ringsTitle: "Anéis de hábitos do dia",
+    ringsHint: "Sem cobrança",
+    practiceTitle: "Sua prática de hoje",
+    practiceSupport:
+      "Sugestões filtradas pelo seu perfil — abra e registre com calma.",
+    motto:
+      "Respeite os limites do seu dia. Movimento é autocuidado compartilhado.",
     loadError: "Não foi possível carregar o cuidado de hoje.",
+    circleEyebrow: "Apoio em par",
+    circleEmpty:
+      "Quando alguém do círculo registrar o dia, aparece um sinal leve aqui.",
+    circleMate: (name: string) =>
+      `${name} já registrou cuidado hoje — sem detalhes de saúde.`,
+    openMove: "Começar prática",
+    openEat: "Ver refeição",
+    moveChip: "Movimento seguro",
+    eatChip: "Nutrição acessível",
+    lowCostChip: "Baixo custo",
   },
   water: {
     title: "Água de hoje",
     meta: (n: number) => `Meta: ${n} ml`,
     total: (n: number) => `${n} ml hoje`,
-    add: (n: number) => `Adicionar ${n} ml`,
+    add: (n: number) => `+ ${n} ml`,
     progressLabel: "Progresso da água de hoje",
+    ringLabel: "Hidratação",
+    ringDetail: (total: number, goal: number) =>
+      `${total.toLocaleString("pt-BR")} de ${goal.toLocaleString("pt-BR")} ml`,
   },
   sleep: {
     title: "Como foi o descanso?",
@@ -24,12 +57,23 @@ export const habitsCopy = {
     save: "Salvar descanso",
     saved: "Descanso registrado para hoje.",
     qualityLegend: "Qualidade do descanso",
+    ringLabel: "Descanso",
+    ringEmpty: "Ainda sem registro hoje.",
+    ringDetail: (minutes: number | null) =>
+      minutes != null
+        ? `${Math.floor(minutes / 60)}h${String(minutes % 60).padStart(2, "0")} registradas`
+        : "Qualidade registrada para hoje.",
+    adjust: "Ajustar",
+    cancelAdjust: "Fechar ajuste",
   },
   pause: {
     title: "Pausa ativa",
     support: "Cinco minutos de movimento leve, a cada cerca de 90 minutos.",
+    reminderEyebrow: "Lembrete de pausa ativa",
+    suggestion: (title: string) =>
+      `Sugestão filtrada para você: ${title}.`,
     listTitle: "Movimentos leves compatíveis com seu perfil",
-    markDone: "Marquei a pausa",
+    markDone: "Iniciar pausa (5 min)",
     marked: "Pausa registrada para hoje.",
     unmarked: "Pausa removida do registro de hoje.",
     empty:
@@ -38,13 +82,19 @@ export const habitsCopy = {
   },
   move: {
     title: "Mover",
-    done: "Movimento registrado hoje.",
+    done: (n: number) =>
+      n === 1
+        ? "1 movimento registrado hoje."
+        : `${n} movimentos registrados hoje.`,
     pending: "Ainda sem registro de movimento hoje.",
-    open: "Abrir Mover",
+    open: "Abrir Rotina",
   },
   eat: {
     title: "Comer",
-    done: "Refeição registrada hoje.",
+    done: (n: number) =>
+      n === 1
+        ? "1 refeição registrada hoje."
+        : `${n} refeições registradas hoje.`,
     pending: "Ainda sem registro de refeição hoje.",
     open: "Abrir Comer",
   },

@@ -58,13 +58,16 @@ CRUD refeições; biblioteca completa (~99) com fotos; Mover/Comer via `list_saf
 Home do dia; registrar água e sono; pausa ativa; lembretes locais com opt-in.
 
 ### Sprint 6 — Conta, LGPD prática, PWA instalável
-Revogar, exportar, excluir; manifest; cache só da casca.
+**Status: fechado (QA aprovado)** — ver `docs/features/sprint-06-account-lgpd-pwa.md` e `docs/features/sprint-06-qa-checklist.md`.  
+Revogar, exportar, excluir; texto do motor; manifest; cache só da casca.
 
 ### Sprint 7 — Cuidado coletivo (dupla primeiro)
+**Status: fechado (QA aprovado)** — ver `docs/features/sprint-07-care-circle-pair.md` e `docs/features/sprint-07-qa-checklist.md`.  
 Convite por código; dias de cuidado compartilhados; sem vazamento clínico.
 
-### Sprint 8 — Grupo + endurecimento + conteúdo rico
-Grupo; auditorias clínica/LGPD/UX/QA; biblioteca mínima de lançamento.
+### Sprint 8 — Grupo + endurecimento + conteúdo de lançamento
+**Status: fechada (2026-09-21)** — ver `docs/features/sprint-08-group-launch-hardening.md` e `docs/features/sprint-08-qa-checklist.md`.  
+Grupo (até 8); auditorias motor/clínica/LGPD/UX/QA; biblioteca mínima verificável. **Última sprint do MVP — MVP pronto para lançamento** (validar joins 8/9 e perfis L1–L6 em staging).
 
 ---
 
