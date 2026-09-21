@@ -298,8 +298,8 @@ export const MEAL_SEED_SNACKS: SeedMeal[] = [
     description:
       "Banana congelada batida com cacau e água ou leite. Com leite: lactose.",
     mealSlot: "snack",
-    containsTags: [],
-    dietCompatibleTags: ["vegan", "vegetarian", "low-cost"],
+    containsTags: ["lactose"],
+    dietCompatibleTags: ["vegetarian", "low-cost"],
     ingredients: [
       { item: "banana congelada", qty: "1 unidade" },
       { item: "cacau em pó", qty: "1 colher de chá" },

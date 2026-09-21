@@ -2,10 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAccountSnapshotAction } from "@/app/actions/account";
+import {
+  getCycleAccountSnapshotAction,
+  getMyHealthEditSnapshotAction,
+} from "@/app/actions/profile-health";
 import { ConsentsPanel } from "@/components/account/consents-panel";
+import { CycleCalendarPanel } from "@/components/account/cycle-calendar-panel";
 import { DeleteAccountPanel } from "@/components/account/delete-account-panel";
 import { ExportDataPanel } from "@/components/account/export-data-panel";
+import { HealthConditionsEditPanel } from "@/components/account/health-conditions-edit-panel";
 import { InstallPwaPanel } from "@/components/account/install-pwa-panel";
+import { NutritionEditPanel } from "@/components/account/nutrition-edit-panel";
 import { PublicProfileForm } from "@/components/account/public-profile-form";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { AppTopBar } from "@/components/layout/app-top-bar";
@@ -25,7 +32,11 @@ export default async function AccountPage() {
     redirect("/login?next=/account");
   }
 
-  const snapshot = await getAccountSnapshotAction();
+  const [snapshot, healthResult, cycleResult] = await Promise.all([
+    getAccountSnapshotAction(),
+    getMyHealthEditSnapshotAction(),
+    getCycleAccountSnapshotAction(),
+  ]);
 
   if (!snapshot.ok) {
     return (
@@ -37,6 +48,8 @@ export default async function AccountPage() {
   }
 
   const data = snapshot.data;
+  const health = healthResult.ok ? healthResult.data : null;
+  const cycle = cycleResult.ok ? cycleResult.data : null;
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -65,6 +78,37 @@ export default async function AccountPage() {
           {accountCopy.motor.support}
         </p>
       </Surface>
+
+      {health ? (
+        <section className="space-y-4" aria-labelledby="health-edit-heading">
+          <div className="space-y-2">
+            <h2
+              id="health-edit-heading"
+              className="text-xl font-semibold text-ink"
+            >
+              {accountCopy.healthEdit.title}
+            </h2>
+            <p className="text-sm leading-relaxed text-ink-soft">
+              {accountCopy.healthEdit.support}
+            </p>
+          </div>
+          <HealthConditionsEditPanel
+            initialConditions={health.conditionTags}
+          />
+          <NutritionEditPanel
+            initialDietPattern={health.dietPattern}
+            initialAvoids={health.avoidsTags}
+          />
+        </section>
+      ) : null}
+
+      <div id="cycle-calendar">
+        <CycleCalendarPanel
+          snapshot={cycle}
+          cycleMode={health?.cycleMode ?? null}
+          hasCycleModule={health?.hasCycleModule ?? Boolean(cycle)}
+        />
+      </div>
 
       <ConsentsPanel consents={data.consents} />
 

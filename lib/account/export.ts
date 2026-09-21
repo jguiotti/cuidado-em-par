@@ -10,6 +10,7 @@ export interface AccountExportPayload {
   clinical: Record<string, unknown> | null;
   nutrition: Record<string, unknown> | null;
   cycle: Record<string, unknown> | null;
+  cycle_period_logs: Array<Record<string, unknown>>;
   biometrics: Record<string, unknown> | null;
   habit_prefs: Record<string, unknown> | null;
   habit_logs: Array<Record<string, unknown>>;

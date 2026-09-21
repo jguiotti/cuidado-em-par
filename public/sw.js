@@ -1,7 +1,8 @@
 /* Shell-only service worker: local reminders + static asset cache.
- * Never cache health, habit, account, or Supabase payloads. */
+ * Never cache health, habit, account, or Supabase payloads.
+ * `/_next/static` uses network-first so soft navigations never keep stale CSS. */
 
-const SHELL_CACHE = "cep-shell-v1";
+const SHELL_CACHE = "cep-shell-v2";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/icons/icon.svg",
@@ -35,13 +36,16 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-function isShellAsset(url) {
+function isImmutableShellAsset(url) {
   return (
-    url.pathname.startsWith("/_next/static/") ||
     url.pathname.startsWith("/icons/") ||
     url.pathname === "/manifest.webmanifest" ||
-    url.pathname === "/sw.js"
+    url.pathname === "/brand/mark.png"
   );
+}
+
+function isNextStaticAsset(url) {
+  return url.pathname.startsWith("/_next/static/");
 }
 
 self.addEventListener("fetch", (event) => {
@@ -61,7 +65,29 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (!isShellAsset(url)) {
+  // Never cache the worker itself; always take the network copy.
+  if (url.pathname === "/sw.js") {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Next chunks change often in dev/deploy — prefer network, fall back offline.
+  if (isNextStaticAsset(url)) {
+    event.respondWith(
+      fetch(request)
+        .then(async (response) => {
+          if (response.ok) {
+            const cache = await caches.open(SHELL_CACHE);
+            cache.put(request, response.clone());
+          }
+          return response;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || Response.error())),
+    );
+    return;
+  }
+
+  if (!isImmutableShellAsset(url)) {
     return;
   }
 

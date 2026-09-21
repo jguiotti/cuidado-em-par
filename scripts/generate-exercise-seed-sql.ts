@@ -4,6 +4,9 @@ import { resolve } from "node:path";
 import { exerciseIdFromSlug } from "../lib/admin/exercise-id";
 import { illustrationStoragePath } from "../lib/admin/exercise-illustration";
 import { EXERCISE_SEED_CATALOG_FULL } from "../lib/admin/exercise-seed-catalog";
+import { enrichExerciseCatalog } from "../lib/clinical/exercise-safety";
+
+const CATALOG = enrichExerciseCatalog(EXERCISE_SEED_CATALOG_FULL);
 
 function sqlArray(values: string[]): string {
   if (values.length === 0) {
@@ -65,7 +68,7 @@ lines.push("  intensity_tags, is_published, created_by");
 lines.push(")");
 lines.push("values");
 
-const values = EXERCISE_SEED_CATALOG_FULL.map((exercise) => {
+const values = CATALOG.map((exercise) => {
   const id = exerciseIdFromSlug(exercise.slug);
   const imagePath = illustrationStoragePath(exercise.slug);
   return `  (
@@ -103,6 +106,4 @@ const outPath = resolve(
   "supabase/migrations/20260921120000_seed_full_exercise_library.sql",
 );
 writeFileSync(outPath, `${lines.join("\n")}\n`, "utf8");
-console.log(
-  `Wrote ${EXERCISE_SEED_CATALOG_FULL.length} exercises to ${outPath}`,
-);
+console.log(`Wrote ${CATALOG.length} exercises to ${outPath}`);

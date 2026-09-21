@@ -6,13 +6,25 @@
 import { EXERCISE_SEED_CATALOG_FULL } from "../lib/admin/exercise-seed-catalog";
 import { MEAL_SEED_CATALOG_FULL } from "../lib/admin/meal-seed-catalog";
 import { memberLimitForKind } from "../lib/care/circle";
+import {
+  enrichExerciseCatalog,
+  isExerciseSafeForProfile,
+} from "../lib/clinical/exercise-safety";
+import {
+  enrichMealCatalog,
+  isMealSafeForProfile,
+} from "../lib/nutrition/meal-safety";
 
 function assert(name: string, condition: boolean) {
   console.log(`${condition ? "PASS" : "FAIL"} ${name}`);
 }
 
-const publishedExercises = EXERCISE_SEED_CATALOG_FULL.filter((e) => e.isPublished);
-const publishedMeals = MEAL_SEED_CATALOG_FULL; // seed treats catalog as publishable library
+const publishedExercises = enrichExerciseCatalog(EXERCISE_SEED_CATALOG_FULL).filter(
+  (e) => e.isPublished,
+);
+const publishedMeals = enrichMealCatalog(MEAL_SEED_CATALOG_FULL).filter(
+  (m) => m.isPublished,
+);
 
 assert("pair member limit is 2", memberLimitForKind("pair") === 2);
 assert("group member limit is 8", memberLimitForKind("group") === 8);
@@ -37,30 +49,51 @@ assert(
   notBlockedForPregnancyT3.length >= 1,
 );
 
-const tornAclSafe = publishedExercises.filter((e) => {
-  const blocked =
-    e.intensityTags.includes("high-impact") ||
-    e.intensityTags.includes("lower-body-plyometrics") ||
-    e.contraindicationTags.includes("torn-acl");
-  return !blocked && e.requiredCapabilityTags.length > 0;
-});
+const fullCaps = ["standing", "seated", "lying", "unilateral", "low-impact"];
+const tornAclSafe = publishedExercises.filter((e) =>
+  isExerciseSafeForProfile(e, {
+    conditionTags: ["torn-acl"],
+    capabilityTags: fullCaps,
+  }),
+);
 assert("torn-acl-safe candidates exist", tornAclSafe.length >= 1);
+assert(
+  "torn-acl never sees high-impact",
+  tornAclSafe.every((e) => !e.intensityTags.includes("high-impact")),
+);
 
-const veganLowCost = publishedMeals.filter(
-  (m) =>
-    m.dietCompatibleTags.includes("vegan") &&
-    m.dietCompatibleTags.includes("low-cost"),
+const veganSafe = publishedMeals.filter((m) =>
+  isMealSafeForProfile(m, { dietPattern: "vegan", avoidsTags: [] }),
+);
+assert("vegan-safe candidates exist", veganSafe.length >= 1);
+assert(
+  "vegan never sees meat/fish/egg/lactose",
+  veganSafe.every(
+    (m) =>
+      !m.containsTags.some((t) =>
+        ["meat", "fish", "egg", "lactose"].includes(t),
+      ),
+  ),
+);
+
+const veganLowCost = veganSafe.filter((m) =>
+  m.dietCompatibleTags.includes("low-cost"),
 );
 assert("vegan + low-cost meals exist", veganLowCost.length >= 1);
 
-const glutenFreeForAvoider = publishedMeals.filter(
-  (m) =>
-    !m.containsTags.includes("gluten") &&
-    m.dietCompatibleTags.includes("low-cost"),
+const glutenAvoidSafe = publishedMeals.filter((m) =>
+  isMealSafeForProfile(m, {
+    dietPattern: "no-restriction",
+    avoidsTags: ["gluten"],
+  }),
+);
+assert(
+  "gluten-avoid never sees gluten contains",
+  glutenAvoidSafe.every((m) => !m.containsTags.includes("gluten")),
 );
 assert(
   "meals without gluten + low-cost exist",
-  glutenFreeForAvoider.length >= 1,
+  glutenAvoidSafe.some((m) => m.dietCompatibleTags.includes("low-cost")),
 );
 
 assert(
@@ -73,5 +106,5 @@ console.log(
   `INFO exercises published=${publishedExercises.length} seated=${seatedOnly.length} pause=${activePause.length}`,
 );
 console.log(
-  `INFO meals=${publishedMeals.length} veganLowCost=${veganLowCost.length} noGlutenLowCost=${glutenFreeForAvoider.length}`,
+  `INFO meals=${publishedMeals.length} veganSafe=${veganSafe.length} glutenAvoidSafe=${glutenAvoidSafe.length}`,
 );

@@ -222,6 +222,7 @@ async function applyRevocationSideEffects(
   }
 
   if (purpose === "cycle_module") {
+    await supabase.from("cycle_period_logs").delete().eq("user_id", userId);
     await supabase.from("user_cycle_profiles").delete().eq("user_id", userId);
     return;
   }
@@ -332,6 +333,7 @@ export async function exportMyDataAction(): Promise<
     clinical,
     nutrition,
     cycle,
+    cycleLogs,
     biometrics,
     habitPrefs,
     habitLogs,
@@ -360,9 +362,16 @@ export async function exportMyDataAction(): Promise<
       .maybeSingle(),
     supabase
       .from("user_cycle_profiles")
-      .select("mode, phase_tags, updated_at")
+      .select(
+        "mode, phase_tags, last_period_start, average_cycle_length_days, average_period_length_days, remind_period_approaching, remind_fertile_window, remind_late_or_possible_pregnancy, updated_at",
+      )
       .eq("user_id", user.id)
       .maybeSingle(),
+    supabase
+      .from("cycle_period_logs")
+      .select("period_start, period_end, created_at")
+      .eq("user_id", user.id)
+      .order("period_start", { ascending: true }),
     supabase
       .from("user_biometrics")
       .select("weight_kg, updated_at")
@@ -388,6 +397,7 @@ export async function exportMyDataAction(): Promise<
     clinical.error ||
     nutrition.error ||
     cycle.error ||
+    cycleLogs.error ||
     biometrics.error ||
     habitPrefs.error ||
     habitLogs.error
@@ -408,6 +418,7 @@ export async function exportMyDataAction(): Promise<
     clinical: clinical.data,
     nutrition: nutrition.data,
     cycle: cycle.data,
+    cycle_period_logs: cycleLogs.data ?? [],
     biometrics: biometrics.data,
     habit_prefs: habitPrefs.data,
     habit_logs: habitLogs.data ?? [],

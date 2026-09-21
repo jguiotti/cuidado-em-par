@@ -27,7 +27,7 @@ export const appCopy = {
     loadError: "Não foi possível carregar os movimentos agora.",
     safetyTitle: "Diretrizes de segurança",
     safetyBody:
-      "A lista abaixo já passou pelo filtro do seu perfil. Em dor aguda, interrompa e busque orientação profissional.",
+      "Só aparecem movimentos compatíveis com as lesões, condições e capacidades do seu perfil. Em dor aguda, interrompa e busque orientação profissional.",
     autonomy:
       "Interrompa a qualquer instante se houver dor aguda. O conforto do seu corpo é o guia.",
     sequenceTitle: "Sequência sugerida",
@@ -36,7 +36,8 @@ export const appCopy = {
   },
   eat: {
     title: "Comer com cuidado",
-    support: "Ideias acessíveis, filtradas pelo que você evita.",
+    support:
+      "Ideias acessíveis, já filtradas pelas restrições e pelo padrão alimentar do seu perfil.",
     empty: "Por enquanto não há refeição listada para o seu perfil.",
     markDone: "Marquei como feito",
     marked: "Registrado para hoje.",
@@ -52,6 +53,11 @@ export const appCopy = {
     allSlots: "Todas",
     loadError: "Não foi possível carregar as refeições agora.",
     filterLabel: "Momento da refeição",
+    safetyTitle: "Filtro do seu perfil",
+    safetyBody:
+      "Só aparecem pratos compatíveis com o que você evita e com o padrão alimentar cadastrado. Em reação alimentar, interrompa e busque orientação profissional.",
+    chipSafe: "Filtrado pelo seu perfil",
+    chipLowCost: "Baixo custo",
   },
   habit: {
     genericError: "Não foi possível registrar agora. Tente de novo.",

@@ -4,6 +4,9 @@ import { resolve } from "node:path";
 import { mealIdFromSlug } from "../lib/admin/meal-id";
 import { mealPhotoStoragePath } from "../lib/admin/meal-illustration";
 import { MEAL_SEED_CATALOG_FULL } from "../lib/admin/meal-seed-catalog";
+import { enrichMealCatalog } from "../lib/nutrition/meal-safety";
+
+const CATALOG = enrichMealCatalog(MEAL_SEED_CATALOG_FULL);
 
 function sqlArray(values: string[]): string {
   if (values.length === 0) {
@@ -59,7 +62,7 @@ lines.push(
 lines.push(")");
 lines.push("values");
 
-const values = MEAL_SEED_CATALOG_FULL.map((entry) => {
+const values = CATALOG.map((entry) => {
   const id = mealIdFromSlug(entry.slug);
   const imagePath = mealPhotoStoragePath(entry.slug);
   return `  (
@@ -96,6 +99,4 @@ const outPath = resolve(
   "supabase/migrations/20260921160000_seed_full_meal_library.sql",
 );
 writeFileSync(outPath, `${lines.join("\n")}\n`, "utf8");
-console.log(
-  `Wrote ${MEAL_SEED_CATALOG_FULL.length} meals to ${outPath}`,
-);
+console.log(`Wrote ${CATALOG.length} meals to ${outPath}`);

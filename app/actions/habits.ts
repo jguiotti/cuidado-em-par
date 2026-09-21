@@ -9,6 +9,7 @@ import {
   isValidSleepInput,
   normalizeSleepMinutes,
   normalizeSleepQuality,
+  sleepHoursToMinutes,
 } from "@/lib/habits/sleep";
 import {
   DEFAULT_HABIT_PREFS,
@@ -136,7 +137,7 @@ export async function getTodayRitualAction(): Promise<
 
   let waterMl = 0;
   let sleep: SleepLogSnapshot | null = null;
-  let activePauseDone = false;
+  let activePauseCount = 0;
   let workoutCount = 0;
   let mealCount = 0;
 
@@ -152,7 +153,10 @@ export async function getTodayRitualAction(): Promise<
             : null,
       };
     } else if (log.kind === "active-pause") {
-      activePauseDone = true;
+      activePauseCount =
+        typeof log.value === "number" && log.value > 0
+          ? Math.round(log.value)
+          : 1;
     } else if (log.kind === "workout") {
       workoutCount += 1;
     } else if (log.kind === "meal") {
@@ -168,7 +172,8 @@ export async function getTodayRitualAction(): Promise<
       waterMl,
       waterGoalMl: prefs.waterGoalMl,
       sleep,
-      activePauseDone,
+      activePauseDone: activePauseCount > 0,
+      activePauseCount,
       workoutDone: workoutCount > 0,
       mealDone: mealCount > 0,
       workoutCount,
@@ -268,6 +273,7 @@ export async function setWaterTotalAction(
 export async function logSleepAction(input: {
   quality?: string | null;
   minutes?: number | null;
+  hours?: number | string | null;
 }): Promise<HabitsActionResult> {
   const { supabase, user } = await requireUser();
   if (!user) {
@@ -279,7 +285,12 @@ export async function logSleepAction(input: {
   }
 
   const quality = normalizeSleepQuality(input.quality);
-  const minutes = normalizeSleepMinutes(input.minutes);
+  const minutesFromHours =
+    input.hours !== undefined && input.hours !== null && input.hours !== ""
+      ? sleepHoursToMinutes(input.hours)
+      : null;
+  const minutes =
+    minutesFromHours ?? normalizeSleepMinutes(input.minutes);
   const day = todayInSaoPaulo();
 
   const { error } = await supabase.from("habit_logs").upsert(
@@ -305,8 +316,8 @@ export async function logSleepAction(input: {
   return { ok: true };
 }
 
-export async function markActivePauseDoneAction(): Promise<
-  HabitsActionResult<{ done: boolean }>
+export async function logActivePauseAction(): Promise<
+  HabitsActionResult<{ count: number }>
 > {
   const { supabase, user } = await requireUser();
   if (!user) {
@@ -314,12 +325,33 @@ export async function markActivePauseDoneAction(): Promise<
   }
 
   const day = todayInSaoPaulo();
+
+  const { data: existing, error: readError } = await supabase
+    .from("habit_logs")
+    .select("value")
+    .eq("user_id", user.id)
+    .eq("day", day)
+    .eq("kind", "active-pause")
+    .eq("content_key", "")
+    .maybeSingle();
+
+  if (readError) {
+    console.error("logActivePauseAction read", readError.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  const previous =
+    typeof existing?.value === "number" && existing.value > 0
+      ? Math.round(existing.value)
+      : 0;
+  const count = previous + 1;
+
   const { error } = await supabase.from("habit_logs").upsert(
     {
       user_id: user.id,
       day,
       kind: "active-pause",
-      value: 1,
+      value: count,
       sleep_quality: null,
       content_id: null,
       content_key: "",
@@ -328,17 +360,28 @@ export async function markActivePauseDoneAction(): Promise<
   );
 
   if (error) {
-    console.error("markActivePauseDoneAction", error.message);
+    console.error("logActivePauseAction", error.message);
     return { ok: false, code: "save_failed" };
   }
 
   await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
-  return { ok: true, data: { done: true } };
+  return { ok: true, data: { count } };
+}
+
+/** @deprecated Use logActivePauseAction — kept for older clients. */
+export async function markActivePauseDoneAction(): Promise<
+  HabitsActionResult<{ done: boolean; count: number }>
+> {
+  const result = await logActivePauseAction();
+  if (!result.ok) {
+    return result;
+  }
+  return { ok: true, data: { done: true, count: result.data.count } };
 }
 
 export async function unmarkActivePauseDoneAction(): Promise<
-  HabitsActionResult<{ done: boolean }>
+  HabitsActionResult<{ done: boolean; count: number }>
 > {
   const { supabase, user } = await requireUser();
   if (!user) {
@@ -360,7 +403,7 @@ export async function unmarkActivePauseDoneAction(): Promise<
 
   await syncCareAfterHabit(supabase, user.id);
   revalidateHabits();
-  return { ok: true, data: { done: false } };
+  return { ok: true, data: { done: false, count: 0 } };
 }
 
 export async function listSafeActivePauseExercisesAction(): Promise<

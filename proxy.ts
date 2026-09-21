@@ -31,7 +31,7 @@ function isAppPath(pathname: string) {
 }
 
 export async function proxy(request: NextRequest) {
-  const { supabase, user, response } = await updateSession(request);
+  const { user, response } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
   if (isPublicPath(pathname)) {
@@ -59,15 +59,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && isAdminPath(pathname)) {
-    const { data: isAdmin, error } = await supabase.rpc("is_admin");
-
-    if (error || isAdmin !== true) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = "/home";
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
+  // Admin authorization is enforced in app/(admin)/layout.tsx only.
+  // Edge RPC denials here caused false /home redirects and soft-nav CSS breakage.
 
   return response;
 }

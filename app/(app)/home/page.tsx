@@ -13,6 +13,8 @@ import {
   listSafeExercisesForMeAction,
   listSafeMealsForMeAction,
 } from "@/app/actions/safe-content";
+import { getCycleAccountSnapshotAction } from "@/app/actions/profile-health";
+import { CycleRemindersBanner } from "@/components/account/cycle-reminders-banner";
 import { ActivePauseCard } from "@/components/habits/active-pause-card";
 import { HabitRemindersOptIn } from "@/components/habits/habit-reminders-opt-in";
 import { SleepCard } from "@/components/habits/sleep-card";
@@ -55,6 +57,7 @@ export default async function HomePage() {
     mealsResult,
     circleResult,
     feedResult,
+    cycleResult,
   ] = await Promise.all([
     getTodayRitualAction(),
     listSafeActivePauseExercisesAction(),
@@ -62,6 +65,7 @@ export default async function HomePage() {
     listSafeMealsForMeAction(),
     getMyCareCircleAction(),
     listCareFeedAction({ days: 1 }),
+    getCycleAccountSnapshotAction(),
   ]);
 
   if (!ritualResult.ok) {
@@ -118,6 +122,17 @@ export default async function HomePage() {
         </p>
       </div>
 
+      {cycleResult.ok && cycleResult.data ? (
+        <CycleRemindersBanner
+          reminders={cycleResult.data.reminders}
+          remindPeriodApproaching={cycleResult.data.remindPeriodApproaching}
+          remindFertileWindow={cycleResult.data.remindFertileWindow}
+          remindLateOrPossiblePregnancy={
+            cycleResult.data.remindLateOrPossiblePregnancy
+          }
+        />
+      ) : null}
+
       {circleNote ? (
         <div className="surface flex items-start gap-3 p-4">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint text-sm font-bold text-mint-deep">
@@ -140,7 +155,7 @@ export default async function HomePage() {
       ) : null}
 
       <ActivePauseCard
-        initiallyDone={ritual.activePauseDone}
+        initialCount={ritual.activePauseCount}
         exercises={pauseExercises}
         highlight
       />

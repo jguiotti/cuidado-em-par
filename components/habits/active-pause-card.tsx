@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import {
-  markActivePauseDoneAction,
+  logActivePauseAction,
   unmarkActivePauseDoneAction,
 } from "@/app/actions/habits";
 import type { SafeExerciseCard } from "@/app/actions/safe-content";
@@ -16,41 +16,53 @@ import { Surface } from "@/components/ui/surface";
 import { habitsCopy } from "@/lib/i18n/habits-pt-br";
 
 interface ActivePauseCardProps {
-  initiallyDone: boolean;
+  initialCount?: number;
+  /** @deprecated Prefer initialCount */
+  initiallyDone?: boolean;
   exercises: SafeExerciseCard[];
   highlight?: boolean;
 }
 
 export function ActivePauseCard({
-  initiallyDone,
+  initialCount,
+  initiallyDone = false,
   exercises,
   highlight = false,
 }: ActivePauseCardProps) {
   const router = useRouter();
-  const [done, setDone] = useState(initiallyDone);
+  const [count, setCount] = useState(
+    initialCount ?? (initiallyDone ? 1 : 0),
+  );
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  function handleToggle() {
+  function handleLogPause() {
     setError(null);
     setMessage(null);
     startTransition(async () => {
-      const result = done
-        ? await unmarkActivePauseDoneAction()
-        : await markActivePauseDoneAction();
-
+      const result = await logActivePauseAction();
       if (!result.ok) {
         setError(habitsCopy.genericError);
         return;
       }
+      setCount(result.data.count);
+      setMessage(habitsCopy.pause.marked(result.data.count));
+      router.refresh();
+    });
+  }
 
-      setDone(result.data.done);
-      setMessage(
-        result.data.done
-          ? habitsCopy.pause.marked
-          : habitsCopy.pause.unmarked,
-      );
+  function handleReset() {
+    setError(null);
+    setMessage(null);
+    startTransition(async () => {
+      const result = await unmarkActivePauseDoneAction();
+      if (!result.ok) {
+        setError(habitsCopy.genericError);
+        return;
+      }
+      setCount(0);
+      setMessage(habitsCopy.pause.unmarked);
       router.refresh();
     });
   }
@@ -81,17 +93,30 @@ export function ActivePauseCard({
           </p>
         ) : null}
 
+        <p className="text-sm font-medium text-mint-deep" aria-live="polite">
+          {habitsCopy.pause.countLabel(count)}
+        </p>
+
         <Button
           type="button"
-          variant={done ? "secondary" : "primary"}
           disabled={isPending}
-          onClick={handleToggle}
+          onClick={handleLogPause}
           className="w-full gap-2 rounded-[var(--radius-pill)]"
-          aria-pressed={done}
         >
-          {!done ? <IconPlay size={18} /> : null}
-          {done ? habitsCopy.pause.marked : habitsCopy.pause.markDone}
+          <IconPlay size={18} />
+          {habitsCopy.pause.markDone}
         </Button>
+
+        {count > 0 ? (
+          <button
+            type="button"
+            className="focus-ring w-full text-sm font-medium text-ink-soft"
+            disabled={isPending}
+            onClick={handleReset}
+          >
+            {habitsCopy.pause.resetToday}
+          </button>
+        ) : null}
 
         <Link
           href="/workouts"
@@ -122,7 +147,7 @@ export function ActivePauseCard({
           </p>
         </div>
         <span className="text-sm font-medium text-mint-deep">
-          {done ? habitsCopy.statusDone : habitsCopy.statusPending}
+          {habitsCopy.pause.countLabel(count)}
         </span>
       </div>
 
@@ -153,14 +178,23 @@ export function ActivePauseCard({
 
       <Button
         type="button"
-        variant={done ? "secondary" : "primary"}
         disabled={isPending}
-        onClick={handleToggle}
+        onClick={handleLogPause}
         className="w-full"
-        aria-pressed={done}
       >
-        {done ? habitsCopy.pause.marked : habitsCopy.pause.markDone}
+        {habitsCopy.pause.markDone}
       </Button>
+
+      {count > 0 ? (
+        <button
+          type="button"
+          className="focus-ring w-full text-sm font-medium text-ink-soft"
+          disabled={isPending}
+          onClick={handleReset}
+        >
+          {habitsCopy.pause.resetToday}
+        </button>
+      ) : null}
 
       <Link
         href="/workouts"

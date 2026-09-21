@@ -1,6 +1,6 @@
 export const accountCopy = {
   title: "Conta",
-  support: "Seu perfil público, consentimentos e direitos sobre os dados.",
+  support: "Perfil público, cuidados de saúde editáveis, consentimentos e direitos sobre os dados.",
   loadError: "Não foi possível carregar a conta agora.",
   genericError: "Não foi possível concluir agora. Tente de novo.",
   saved: "Alterações salvas.",
@@ -66,4 +66,62 @@ export const accountCopy = {
     "Sem personalização de saúde ativa, não listamos movimentos sob medida.",
   eatEmptyAfterRevoke:
     "Sem personalização de saúde ativa, não listamos refeições sob medida.",
+  healthEdit: {
+    title: "Cuidados que mudam com o tempo",
+    support:
+      "Lesões, mobilidade e alimentação podem mudar. Ao salvar, treinos e refeições são filtrados de novo com o que vale agora.",
+    clinicalTitle: "Condições e lesões",
+    clinicalSupport:
+      "Adicione o que surgiu ou remova o que já não se aplica — por exemplo, após uma cirurgia ou uma nova lesão.",
+    nutritionTitle: "Alimentação e restrições",
+    nutritionSupport:
+      "Padrão alimentar e alergias ou intolerâncias. O cardápio seguro acompanha cada alteração.",
+    save: "Salvar cuidados",
+    motorHint:
+      "As listas de Mover e Comer passam a usar só o perfil atualizado.",
+  },
+  cycle: {
+    title: "Calendário do ciclo",
+    support:
+      "Estimativa pelo método do calendário, para você acompanhar menstruação, janela fértil e atraso. Não é diagnóstico nem método contraceptivo.",
+    inactive:
+      "O acompanhamento de ciclo não está ativo. Ative em Consentimentos (Ciclo menstrual ou gestação) e escolha o modo menstrual no cadastro de cuidados.",
+    pregnancyMode:
+      "Você marcou possível gestação. O calendário menstrual fica pausado enquanto o modo gestação estiver ativo.",
+    lastPeriod: "Início da última menstruação",
+    cycleLength: "Duração média do ciclo (dias)",
+    periodLength: "Duração média do sangramento (dias)",
+    logPeriod: "Registrar que a menstruação começou hoje",
+    logPeriodOther: "Registrar início em outra data",
+    saveSettings: "Salvar calendário",
+    possiblePregnancy: "Marcar possível gestação",
+    possiblePregnancyHint:
+      "Troca o cuidado para modo gestação (1º trimestre) e adapta movimentos. Confirme com profissional de saúde.",
+    remindersTitle: "Lembretes do ciclo",
+    remindPeriod: "Avisar quando a menstruação estiver próxima",
+    remindFertile: "Avisar no início da janela fértil estimada",
+    remindLate: "Avisar se o ciclo atrasar muito (cadastrar ou possível gestação)",
+    legendPeriod: "Menstruação",
+    legendFertile: "Janela fértil",
+    legendOvulation: "Ovulação estimada",
+    legendPredicted: "Próxima menstruação (estimada)",
+    legendLate: "Atraso",
+    monthPrev: "Mês anterior",
+    monthNext: "Próximo mês",
+    weekdays: ["D", "S", "T", "Q", "Q", "S", "S"] as const,
+    disclaimer:
+      "Estimativas educativas. Em dúvida clínica, procure atendimento de saúde.",
+  },
+  cycleAlerts: {
+    periodApproaching: (days: number) =>
+      days === 1
+        ? "A menstruação estimada fica a cerca de 1 dia."
+        : `A menstruação estimada fica a cerca de ${days} dias.`,
+    fertileStarting: "A janela fértil estimada começa por estes dias.",
+    late: (days: number) =>
+      days === 1
+        ? "O ciclo parece 1 dia atrasado. Dá para registrar a menstruação ou marcar possível gestação na Conta."
+        : `O ciclo parece ${days} dias atrasado. Dá para registrar a menstruação ou marcar possível gestação na Conta.`,
+    openCycle: "Abrir calendário do ciclo",
+  },
 } as const;

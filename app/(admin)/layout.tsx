@@ -2,6 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { BrandLogo } from "@/components/brand/brand-logo";
+import {
+  ensureUserIsAdmin,
+  isDevAuthBypassEnabled,
+} from "@/lib/auth/dev-bypass";
 import { adminCopy } from "@/lib/i18n/admin-pt-br";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,9 +29,21 @@ export default async function AdminLayout({
     redirect("/login?next=/admin");
   }
 
-  const { data: isAdmin } = await supabase.rpc("is_admin");
+  if (isDevAuthBypassEnabled()) {
+    try {
+      await ensureUserIsAdmin(user.id);
+    } catch (error) {
+      console.error("admin layout ensureUserIsAdmin", error);
+    }
+  }
+
+  const { data: isAdmin, error: adminError } = await supabase.rpc("is_admin");
+  if (adminError) {
+    console.error("admin layout is_admin", adminError.message);
+    redirect("/home?shell=1");
+  }
   if (isAdmin !== true) {
-    redirect("/home");
+    redirect("/home?shell=1");
   }
 
   return (

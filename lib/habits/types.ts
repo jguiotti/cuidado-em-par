@@ -29,7 +29,9 @@ export interface TodayRitualSnapshot {
   waterMl: number;
   waterGoalMl: number;
   sleep: SleepLogSnapshot | null;
+  /** @deprecated Prefer activePauseCount — kept for older callers. */
   activePauseDone: boolean;
+  activePauseCount: number;
   workoutDone: boolean;
   mealDone: boolean;
   workoutCount: number;

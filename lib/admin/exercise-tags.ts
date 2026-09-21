@@ -1,5 +1,6 @@
 import { CLINICAL_CONDITION_SLUGS } from "@/lib/clinical/conditions-catalog";
 import { MOVEMENT_CONTENT_TAGS } from "@/lib/clinical/conditions-catalog";
+import { enrichExerciseContraindications } from "@/lib/clinical/exercise-safety";
 import { TAG_SLUGS } from "@/lib/tags/constants";
 
 export const EXERCISE_EQUIPMENT_SLUGS = [
@@ -133,19 +134,36 @@ export function sanitizeExerciseFormInput(input: ExerciseFormInput): {
     }
   }
 
+  const intensityTags = filterAllowed(
+    input.intensityTags,
+    EXERCISE_INTENSITY_SLUGS,
+  );
+  const manualContras = filterAllowed(
+    input.contraindicationTags,
+    EXERCISE_CONTRAINDICATION_SLUGS,
+  );
+  // Educador: intensity tags auto-mark injuries/phases that prohibit the move.
+  const enriched = enrichExerciseContraindications({
+    intensityTags,
+    contraindicationTags: manualContras,
+    requiredCapabilityTags: [],
+    isPublished: false,
+  });
+  const contraindicationTags = filterAllowed(
+    enriched.contraindicationTags,
+    EXERCISE_CONTRAINDICATION_SLUGS,
+  );
+
   const value: ExerciseFormInput = {
     title,
     description,
     equipmentTags: filterAllowed(input.equipmentTags, EXERCISE_EQUIPMENT_SLUGS),
-    contraindicationTags: filterAllowed(
-      input.contraindicationTags,
-      EXERCISE_CONTRAINDICATION_SLUGS,
-    ),
+    contraindicationTags,
     requiredCapabilityTags: filterAllowed(
       input.requiredCapabilityTags,
       EXERCISE_CAPABILITY_SLUGS,
     ),
-    intensityTags: filterAllowed(input.intensityTags, EXERCISE_INTENSITY_SLUGS),
+    intensityTags,
     targetMuscles: filterAllowed(input.targetMuscles, EXERCISE_MUSCLE_SLUGS),
     videoUrl,
     imagePaths: input.imagePaths.filter((path) => path.startsWith("exercises/")),

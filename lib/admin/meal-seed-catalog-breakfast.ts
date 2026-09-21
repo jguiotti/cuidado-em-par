@@ -8,7 +8,7 @@ export const MEAL_SEED_BREAKFAST: SeedMeal[] = [
     description:
       "Aqueça a aveia com água ou leite até engrossar. Amasse a banana, junte canela. Sem açúcar se preferir. Aveia comum: contém glúten.",
     mealSlot: "breakfast",
-    containsTags: ["gluten"],
+    containsTags: ["gluten", "lactose"],
     dietCompatibleTags: ["vegetarian", "low-cost"],
     ingredients: [
       { item: "aveia em flocos", qty: "4 colheres de sopa" },

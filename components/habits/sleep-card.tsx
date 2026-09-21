@@ -12,6 +12,7 @@ import { HabitRing } from "@/components/ui/habit-ring";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Surface } from "@/components/ui/surface";
 import { TextField } from "@/components/ui/text-field";
+import { sleepMinutesToHoursLabel } from "@/lib/habits/sleep";
 import { habitsCopy } from "@/lib/i18n/habits-pt-br";
 import {
   SLEEP_QUALITY_VALUES,
@@ -54,8 +55,8 @@ export function SleepCard({ initial, compact = false }: SleepCardProps) {
   const [quality, setQuality] = useState<SleepQuality | null>(
     initial?.quality ?? null,
   );
-  const [minutes, setMinutes] = useState(
-    initial?.minutes != null ? String(initial.minutes) : "",
+  const [hours, setHours] = useState(
+    initial?.minutes != null ? sleepMinutesToHoursLabel(initial.minutes) : "",
   );
   const [message, setMessage] = useState<string | null>(
     initial ? habitsCopy.sleep.saved : null,
@@ -71,17 +72,18 @@ export function SleepCard({ initial, compact = false }: SleepCardProps) {
     setError(null);
     setMessage(null);
 
-    const parsedMinutes =
-      minutes.trim() === "" ? null : Number(minutes.trim());
-
     startTransition(async () => {
       const result = await logSleepAction({
         quality,
-        minutes: parsedMinutes,
+        hours: hours.trim() === "" ? null : hours.trim(),
       });
 
       if (!result.ok) {
-        setError(habitsCopy.genericError);
+        setError(
+          result.code === "invalid_sleep"
+            ? habitsCopy.sleep.invalidHours
+            : habitsCopy.genericError,
+        );
         return;
       }
 
@@ -150,12 +152,12 @@ export function SleepCard({ initial, compact = false }: SleepCardProps) {
         </ChoiceCardGroup>
 
         <TextField
-          label={habitsCopy.sleep.minutesLabel}
-          hint={habitsCopy.sleep.minutesHint}
-          name="sleepMinutes"
-          inputMode="numeric"
-          value={minutes}
-          onChange={(event) => setMinutes(event.target.value)}
+          label={habitsCopy.sleep.hoursLabel}
+          hint={habitsCopy.sleep.hoursHint}
+          name="sleepHours"
+          inputMode="decimal"
+          value={hours}
+          onChange={(event) => setHours(event.target.value)}
           disabled={isPending}
         />
 

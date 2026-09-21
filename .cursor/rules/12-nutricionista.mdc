@@ -11,11 +11,21 @@ Inteligência clínica da alimentação. Prioriza ingredientes baratos, densos e
 Biblioteca de receitas, lista de mercado, restrição alimentar, hidratação no contexto nutricional, ciclo e gestação afetando fome, náusea, ferro, fibras; qualquer sugestão do que comer.
 
 ## Fonte de verdade do cardápio
-- Restrições do onboarding: `lib/nutrition/food-conditions-catalog.ts`.
+- Restrições do onboarding: `lib/nutrition/food-conditions-catalog.ts` (`avoids_tags` = o que a pessoa não pode comer).
+- Motor offline + enriquecimento: `lib/nutrition/meal-safety.ts` (marca `contains_tags` a partir dos ingredientes; reconcilia `diet_compatible_tags`; espelha `list_safe_meals`).
 - Biblioteca de refeições (baixo custo + tags): `lib/admin/meal-seed-catalog.ts` (+ breakfast/snacks/lunch/dinner).
-- Geração SQL: `scripts/generate-meal-seed-sql.ts` → migration `seed_full_meal_library`.
+- Geração SQL: `scripts/generate-meal-seed-sql.ts` → migration `seed_full_meal_library` (com enriquecimento).
+- Sync clínico: `scripts/generate-meal-safety-sync-sql.ts` → migration `sync_meal_nutrition_safety`.
+- Auditoria obrigatória: `npx tsx scripts/nutricionista-meal-safety-audit.ts` (falha se glúten/lactose/ovo/carne vazarem para quem evita).
 - Fotos seed: `public/meal-photos/{slug}.png` (paths `meals/photos/{slug}.png`).
 - Em dúvida de alergia ao cadastrar: não publicar; `contains_tags` descreve o prato, não a pessoa.
+
+### Validação completa (restrições × refeições) — checklist Nutricionista
+1. Percorrer `FOOD_AVOID_CONDITIONS`: cada slug deve existir como tag `kind = contains` e ser usável em `contains_tags` / `avoids_tags`.
+2. Percorrer a biblioteca publicada: ingredientes com alérgeno/restrição → `contains_tags` via `enrichMealSafetyTags` (admin e seeds).
+3. Conferir lacunas: “água ou leite” → marcar `lactose`; aveia comum → `gluten`; carne/peixe → remover vegan/vegetarian.
+4. `list_safe_meals` bloqueia `contains_tags && avoids_tags` e exige `diet_pattern` compatível — nunca filtrar só na UI.
+5. Rodar a auditoria; só liberar UI “Comer” se todos os PASS.
 
 ## Responsabilidades
 - Taxonomia de tags alimentares: restrição do perfil versus tag de ingrediente/receita.

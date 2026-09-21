@@ -7,6 +7,7 @@ import {
   isValidSleepInput,
   normalizeSleepMinutes,
   normalizeSleepQuality,
+  sleepHoursToMinutes,
 } from "../lib/habits/sleep";
 import { isValidIsoDate, todayInSaoPaulo } from "../lib/habits/day";
 import { isSleepQuality } from "../lib/habits/types";
@@ -34,10 +35,16 @@ assert(
   isValidSleepInput({ quality: "good", minutes: 420 }),
 );
 assert(
+  "sleep input accepts hours",
+  isValidSleepInput({ quality: null, hours: 6 }),
+);
+assert(
   "sleep input rejects empty",
-  !isValidSleepInput({ quality: null, minutes: null }),
+  !isValidSleepInput({ quality: null, minutes: null, hours: null }),
 );
 assert("normalize minutes 420", normalizeSleepMinutes(420) === 420);
+assert("6 hours → 360 minutes", sleepHoursToMinutes(6) === 360);
+assert("6,5 hours → 390 minutes", sleepHoursToMinutes("6,5") === 390);
 assert("normalize quality ok", normalizeSleepQuality("ok") === "ok");
 
 const day = todayInSaoPaulo();

@@ -10,6 +10,18 @@ export function isDevAuthBypassEnabled(): boolean {
 
 export const DEV_AUTH_EMAIL = "dev@cuidado.local";
 
+/** Promotes a user to backoffice admin (service role; local/dev only). */
+export async function ensureUserIsAdmin(userId: string): Promise<void> {
+  const admin = createAdminClient();
+  const { error } = await admin.from("user_roles").upsert(
+    { user_id: userId, role: "admin" },
+    { onConflict: "user_id" },
+  );
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 /**
  * Ensures a confirmed local user exists (no e-mail send).
  */
@@ -27,6 +39,7 @@ export async function ensureDevAuthUser(): Promise<{ email: string; userId: stri
     });
 
   if (!createError && created.user) {
+    await ensureUserIsAdmin(created.user.id);
     return { email, userId: created.user.id };
   }
 
@@ -50,6 +63,7 @@ export async function ensureDevAuthUser(): Promise<{ email: string; userId: stri
     );
   }
 
+  await ensureUserIsAdmin(existing.id);
   return { email, userId: existing.id };
 }
 

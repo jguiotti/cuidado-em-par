@@ -1,4 +1,5 @@
 import { FOOD_AVOID_SLUGS } from "@/lib/nutrition/food-conditions-catalog";
+import { enrichMealSafetyTags } from "@/lib/nutrition/meal-safety";
 import { MEAL_SLOT_VALUES, TAG_SLUGS } from "@/lib/tags/constants";
 
 export const MEAL_CONTAINS_SLUGS = FOOD_AVOID_SLUGS;
@@ -96,14 +97,24 @@ export function sanitizeMealFormInput(input: MealFormInput):
     return { ok: false, code: "invalid_ingredients" };
   }
 
+  const manualContains = filterAllowed(input.containsTags, MEAL_CONTAINS_SLUGS);
+  const manualDiet = filterAllowed(input.dietCompatibleTags, MEAL_DIET_SLUGS);
+  // Nutricionista: ingredients auto-mark allergens/restrictions on the plate.
+  const enriched = enrichMealSafetyTags({
+    containsTags: manualContains,
+    dietCompatibleTags: manualDiet,
+    ingredients,
+    isPublished: false,
+  });
+
   const value: MealFormInput = {
     title,
     description,
     ingredients,
     mealSlot: input.mealSlot,
-    containsTags: filterAllowed(input.containsTags, MEAL_CONTAINS_SLUGS),
+    containsTags: filterAllowed(enriched.containsTags, MEAL_CONTAINS_SLUGS),
     dietCompatibleTags: filterAllowed(
-      input.dietCompatibleTags,
+      enriched.dietCompatibleTags,
       MEAL_DIET_SLUGS,
     ),
     phaseTags: [],

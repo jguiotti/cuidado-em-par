@@ -11,16 +11,25 @@ Inteligência clínica do movimento. Garante que nenhum exercício, pausa ativa 
 Biblioteca de exercícios, montagem de rotina, cadastro de lesão/PCD, ciclo menstrual, gestação, pausa ativa, biometria usada para intensidade, gamificação de treino.
 
 ## Fonte de verdade do catálogo clínico
-- Condições do onboarding e bloqueios: `lib/clinical/conditions-catalog.ts`.
-- Seeds SQL e `tag_block_rules`: migration `expand_clinical_condition_catalog`.
+- Condições do onboarding e bloqueios: `lib/clinical/conditions-catalog.ts` (`blocks[]` = lesões que proíbem tags de movimento).
+- Motor offline + enriquecimento: `lib/clinical/exercise-safety.ts` (marca contraindicações a partir de intensity × `blocks`, espelha `list_safe_exercises`).
+- Seeds SQL e `tag_block_rules`: sync via `scripts/generate-exercise-safety-sync-sql.ts` → migration `sync_exercise_clinical_safety`.
 - Biblioteca de exercícios (baixo custo + tags clínicas): `lib/admin/exercise-seed-catalog.ts` (+ part2/part3).
-- Geração SQL: `scripts/generate-exercise-seed-sql.ts` → migration `seed_full_exercise_library`.
+- Geração SQL: `scripts/generate-exercise-seed-sql.ts` → migration `seed_full_exercise_library` (com enriquecimento).
+- Auditoria obrigatória: `npx tsx scripts/educador-exercise-safety-audit.ts` (falha se LCA/condromalácia/gestação deixarem passar impacto/pliometria).
 - UX: busca + grupos (não lista plana). Labels em pt-BR; slugs em inglês.
 - Em dúvida clínica ao ampliar o catálogo: bloquear a tag de conteúdo e documentar o motivo no `blocks[]`.
 
+### Validação completa (lesões × treinos) — checklist Educador
+1. Percorrer `CLINICAL_CONDITIONS`: cada `blocks[]` deve existir em `MOVEMENT_CONTENT_TAGS` (ou tags core de intensity) e em `tag_block_rules`.
+2. Percorrer a biblioteca publicada: cada `intensity_tags` de risco deve gerar `contraindication_tags` via `enrichExerciseContraindications` (admin e seeds usam isso).
+3. Conferir lacunas históricas: `torn-acl` e `chondromalacia` **sempre** bloqueiam `high-impact` e `lower-body-plyometrics`; gestação T2/T3 bloqueia `prone-position` + impacto/pliometria.
+4. Alias legado: `hernia` ↔ `disc-herniation` no motor SQL e nas contraindicações.
+5. Rodar a auditoria; só liberar UI “Mover” se todos os PASS.
+
 ### Revisão da biblioteca de exercícios
 1. Cada exercício precisa de `required_capability_tags` (≥ 1) antes de publicar.
-2. Impacto/pliometria → `intensity_tags` + `contraindication_tags` de joelho/tornozelo/gestação/osteoporose.
+2. Impacto/pliometria → `intensity_tags` + `contraindication_tags` de joelho/tornozelo/gestação/osteoporose (enriquecimento automático + revisão manual).
 3. Flexão/rotação de coluna → contraindicar `disc-herniation` / `hernia`.
 4. Sentado / cadeira de rodas: preferir `seated` sem exigir `standing`.
 5. Em dúvida: `is_published = false` (ex.: pseudo-planche, L-sit, flexão de pulso invertida).

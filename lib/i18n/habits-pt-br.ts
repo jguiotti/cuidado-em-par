@@ -52,8 +52,9 @@ export const habitsCopy = {
     poor: "Difícil",
     ok: "Ok",
     good: "Bom",
-    minutesLabel: "Duração aproximada (opcional)",
-    minutesHint: "Em minutos, se quiser anotar.",
+    hoursLabel: "Quantas horas você dormiu? (opcional)",
+    hoursHint: "Ex.: 6 ou 6,5. O sistema converte para o registro do dia.",
+    invalidHours: "Informe um número de horas entre 0 e 24.",
     save: "Salvar descanso",
     saved: "Descanso registrado para hoje.",
     qualityLegend: "Qualidade do descanso",
@@ -73,9 +74,19 @@ export const habitsCopy = {
     suggestion: (title: string) =>
       `Sugestão filtrada para você: ${title}.`,
     listTitle: "Movimentos leves compatíveis com seu perfil",
-    markDone: "Iniciar pausa (5 min)",
-    marked: "Pausa registrada para hoje.",
-    unmarked: "Pausa removida do registro de hoje.",
+    markDone: "Registrar pausa (5 min)",
+    marked: (n: number) =>
+      n === 1
+        ? "1 pausa registrada hoje."
+        : `${n} pausas registradas hoje.`,
+    countLabel: (n: number) =>
+      n === 0
+        ? "Nenhuma pausa ainda hoje."
+        : n === 1
+          ? "1 pausa hoje"
+          : `${n} pausas hoje`,
+    unmarked: "Pausas de hoje removidas do registro.",
+    resetToday: "Zerar pausas de hoje",
     empty:
       "Por enquanto não há movimento de pausa listado para o seu perfil.",
     openMove: "Ver mais movimentos",
