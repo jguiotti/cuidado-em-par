@@ -10,6 +10,13 @@ Inteligência clínica da alimentação. Prioriza ingredientes baratos, densos e
 ## Quando atuar
 Biblioteca de receitas, lista de mercado, restrição alimentar, hidratação no contexto nutricional, ciclo e gestação afetando fome, náusea, ferro, fibras; qualquer sugestão do que comer.
 
+## Fonte de verdade do cardápio
+- Restrições do onboarding: `lib/nutrition/food-conditions-catalog.ts`.
+- Biblioteca de refeições (baixo custo + tags): `lib/admin/meal-seed-catalog.ts` (+ breakfast/snacks/lunch/dinner).
+- Geração SQL: `scripts/generate-meal-seed-sql.ts` → migration `seed_full_meal_library`.
+- Fotos seed: `public/meal-photos/{slug}.png` (paths `meals/photos/{slug}.png`).
+- Em dúvida de alergia ao cadastrar: não publicar; `contains_tags` descreve o prato, não a pessoa.
+
 ## Responsabilidades
 - Taxonomia de tags alimentares: restrição do perfil versus tag de ingrediente/receita.
 - Respeitar doença celíaca, lactose, veganismo, vegetarianismo, alergias e demais restrições sem encarecer a lista.

@@ -1,10 +1,61 @@
-export default function HabitsPage() {
+import { redirect } from "next/navigation";
+
+import { getTodayRitualAction } from "@/app/actions/habits";
+import { HabitPrefsForm } from "@/components/habits/habit-prefs-form";
+import { HabitRemindersOptIn } from "@/components/habits/habit-reminders-opt-in";
+import { InlineAlert } from "@/components/ui/inline-alert";
+import { habitsCopy } from "@/lib/i18n/habits-pt-br";
+import {
+  pathForOnboardingStep,
+  resolveOnboardingStep,
+} from "@/lib/onboarding/progress";
+import { getOnboardingProgressInput } from "@/lib/onboarding/server";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function HabitsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login?next=/habits");
+  }
+
+  const progress = await getOnboardingProgressInput(user.id);
+  const step = resolveOnboardingStep(progress);
+
+  if (step !== "completed") {
+    redirect(pathForOnboardingStep(step));
+  }
+
+  const ritualResult = await getTodayRitualAction();
+
+  if (!ritualResult.ok) {
+    return (
+      <main className="flex flex-1 flex-col gap-4">
+        <h1 className="text-3xl font-bold text-ink">{habitsCopy.prefs.title}</h1>
+        <InlineAlert tone="error">{habitsCopy.home.loadError}</InlineAlert>
+      </main>
+    );
+  }
+
+  const ritual = ritualResult.data;
+
   return (
-    <main className="flex flex-1 flex-col gap-4">
-      <h1 className="text-3xl font-bold text-ink">Hábitos</h1>
-      <p className="text-base leading-relaxed text-ink-soft">
-        Água e pausa ativa (5 minutos a cada 90 minutos) para todo perfil.
-      </p>
+    <main className="flex flex-1 flex-col gap-6">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-ink">{habitsCopy.prefs.title}</h1>
+        <p className="text-base leading-relaxed text-ink-soft">
+          {habitsCopy.prefs.support}
+        </p>
+      </div>
+
+      <HabitPrefsForm initial={ritual.prefs} />
+      <HabitRemindersOptIn
+        initiallyConsented={ritual.hasRemindersConsent}
+        prefs={ritual.prefs}
+      />
     </main>
   );
 }

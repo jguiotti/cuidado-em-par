@@ -1,7 +1,7 @@
 # Sprint 2 — Onboarding clínico, alimentar, ciclo e hábitos (água, sono, pausa)
 
 Comando de origem: `/nova-feature`  
-Status: **implementado** (código + `docs/features/sprint-02-qa-checklist.md`).  
+Status: **fechada** (2026-09-21) — código + migrations aplicadas no Dashboard + QA smoke + cadastro real até `/home`.  
 Sexo atribuído ao nascer é **opcional**; copy explica que a escolha ajuda a montar treinos e refeições mais adequados.
 
 ---

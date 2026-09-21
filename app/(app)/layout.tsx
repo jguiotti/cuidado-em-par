@@ -1,15 +1,16 @@
 import Link from "next/link";
 
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { appCopy } from "@/lib/i18n/app-pt-br";
 import { createClient } from "@/lib/supabase/server";
 
 const appNav = [
-  { href: "/home", label: "Início" },
-  { href: "/workouts", label: "Treinos" },
-  { href: "/meals", label: "Refeições" },
-  { href: "/habits", label: "Hábitos" },
-  { href: "/circle", label: "Círculo" },
-  { href: "/account", label: "Conta" },
+  { href: "/home", label: appCopy.nav.home },
+  { href: "/workouts", label: appCopy.nav.move },
+  { href: "/meals", label: appCopy.nav.eat },
+  { href: "/habits", label: appCopy.nav.habits },
+  { href: "/circle", label: appCopy.nav.circle },
+  { href: "/account", label: appCopy.nav.account },
 ] as const;
 
 export default async function AppLayout({

@@ -28,6 +28,16 @@ npm run dev
 
 `http://localhost:3000/auth/callback`
 
+5. Para acessar o backoffice (`/admin`), promova um usuário:
+
+```sql
+insert into public.user_roles (user_id, role)
+values ('<auth-user-uuid>', 'admin')
+on conflict (user_id) do update set role = 'admin';
+```
+
+Aplique também a migration de seed de exercícios (Sprint 3) no SQL Editor, se ainda não rodou com as demais.
+
 ## Estrutura
 
 - `app/(public)` — boas-vindas, login, termos

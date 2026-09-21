@@ -13,8 +13,17 @@ Biblioteca de exercícios, montagem de rotina, cadastro de lesão/PCD, ciclo men
 ## Fonte de verdade do catálogo clínico
 - Condições do onboarding e bloqueios: `lib/clinical/conditions-catalog.ts`.
 - Seeds SQL e `tag_block_rules`: migration `expand_clinical_condition_catalog`.
+- Biblioteca de exercícios (baixo custo + tags clínicas): `lib/admin/exercise-seed-catalog.ts` (+ part2/part3).
+- Geração SQL: `scripts/generate-exercise-seed-sql.ts` → migration `seed_full_exercise_library`.
 - UX: busca + grupos (não lista plana). Labels em pt-BR; slugs em inglês.
 - Em dúvida clínica ao ampliar o catálogo: bloquear a tag de conteúdo e documentar o motivo no `blocks[]`.
+
+### Revisão da biblioteca de exercícios
+1. Cada exercício precisa de `required_capability_tags` (≥ 1) antes de publicar.
+2. Impacto/pliometria → `intensity_tags` + `contraindication_tags` de joelho/tornozelo/gestação/osteoporose.
+3. Flexão/rotação de coluna → contraindicar `disc-herniation` / `hernia`.
+4. Sentado / cadeira de rodas: preferir `seated` sem exigir `standing`.
+5. Em dúvida: `is_published = false` (ex.: pseudo-planche, L-sit, flexão de pulso invertida).
 
 ### Grupos atuais
 PCD/neuromotor, joelho, quadril/pelve, tornozelo/pé, ombro, cotovelo/punho/mão, coluna/tronco, sistêmicas.

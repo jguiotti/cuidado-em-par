@@ -41,17 +41,21 @@ Ver `docs/features/sprint-01-onboarding-consent.md`.
 Termos, personalização de saúde, apelido, gênero opcional, foco, peso opcional.
 
 ### Sprint 2 — Onboarding clínico, alimentar, ciclo opt-in + hábitos base
-Ver `docs/features/sprint-02-clinical-nutrition-cycle-habits.md`.
-Sexo atribuído ao nascer (lista fechada, sensível), condições, mobilidade, nutrição, ciclo/gestação opt-in para todas as pessoas, preferências de água, sono e pausa ativa.
+**Status: fechada (2026-09-21).**  
+Ver `docs/features/sprint-02-clinical-nutrition-cycle-habits.md` e `docs/features/sprint-02-qa-checklist.md`.  
+Sexo atribuído ao nascer (lista fechada, sensível), condições (busca 0–N), mobilidade, nutrição (padrão + restrições 0–N), ciclo/gestação opt-in, preferências de água/sono/pausa.
 
 ### Sprint 3 — Backoffice de exercícios
-CRUD, tags, upload, seed mínimo (inclui pausa ativa e variações sentado).
+**Status: fechado (QA aprovado)** — ver `docs/features/sprint-03-admin-exercises.md` e `docs/features/sprint-03-qa-checklist.md`.  
+CRUD, tags, upload, biblioteca completa (~146) com ilustrações, seed + motor.
 
 ### Sprint 4 — Backoffice de refeições + motor na UI
-CRUD refeições; telas Mover/Comer via `list_safe_*`; marcar como feito.
+**Status: fechado (QA aprovado)** — ver `docs/features/sprint-04-meals-and-safe-ui.md` e `docs/features/sprint-04-qa-checklist.md`.  
+CRUD refeições; biblioteca completa (~99) com fotos; Mover/Comer via `list_safe_*`; marcar feito.
 
 ### Sprint 5 — Hoje + hábitos (água, sono, pausa)
-Home do dia; registrar água e qualidade/horas de sono (mínimo); lembrete de pausa; PWA notifications com opt-in.
+**Status: fechado (QA aprovado)** — ver `docs/features/sprint-05-today-habits.md` e `docs/features/sprint-05-qa-checklist.md`.  
+Home do dia; registrar água e sono; pausa ativa; lembretes locais com opt-in.
 
 ### Sprint 6 — Conta, LGPD prática, PWA instalável
 Revogar, exportar, excluir; manifest; cache só da casca.
