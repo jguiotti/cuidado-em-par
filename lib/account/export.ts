@@ -12,6 +12,8 @@ export interface AccountExportPayload {
   cycle: Record<string, unknown> | null;
   cycle_period_logs: Array<Record<string, unknown>>;
   biometrics: Record<string, unknown> | null;
+  body_measurements: Array<Record<string, unknown>>;
+  daily_plans: Array<Record<string, unknown>>;
   habit_prefs: Record<string, unknown> | null;
   habit_logs: Array<Record<string, unknown>>;
 }

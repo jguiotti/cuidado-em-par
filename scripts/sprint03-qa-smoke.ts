@@ -53,6 +53,7 @@ const shortTitle = sanitizeExerciseFormInput({
   targetMuscles: [],
   videoUrl: null,
   imagePaths: [],
+  estimatedDurationMinutes: 5,
 });
 console.log(
   `${!shortTitle.ok && shortTitle.code === "invalid_title" ? "PASS" : "FAIL"} invalid title`,

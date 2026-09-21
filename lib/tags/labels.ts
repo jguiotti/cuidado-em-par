@@ -84,6 +84,7 @@ export const HABIT_KIND_LABELS_PT_BR: Record<HabitKind, string> = {
   workout: "Treino",
   meal: "Refeição",
   sleep: "Sono",
+  cardio: "Cardio",
 };
 
 export const MEAL_SLOT_LABELS_PT_BR: Record<MealSlot, string> = {

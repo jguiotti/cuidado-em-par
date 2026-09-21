@@ -32,6 +32,8 @@ function revalidateHabits() {
   revalidatePath("/workouts");
   revalidatePath("/meals");
   revalidatePath("/circle");
+  revalidatePath("/progress");
+  revalidatePath("/account");
 }
 
 async function requireUser() {
@@ -60,6 +62,8 @@ function mapPrefs(row: {
   sleep_target_bedtime: string | null;
   active_pause_enabled: boolean;
   active_pause_interval_minutes: number;
+  workout_minutes_per_day?: number | null;
+  workout_weekdays?: number[] | null;
 } | null): HabitPrefsSnapshot {
   if (!row) {
     return { ...DEFAULT_HABIT_PREFS };
@@ -71,6 +75,13 @@ function mapPrefs(row: {
     sleepTargetBedtime = bedtime.slice(0, 5);
   }
 
+  const weekdays = Array.isArray(row.workout_weekdays)
+    ? row.workout_weekdays.filter(
+        (day): day is number =>
+          typeof day === "number" && day >= 0 && day <= 6,
+      )
+    : DEFAULT_HABIT_PREFS.workoutWeekdays;
+
   return {
     waterGoalMl: row.water_goal_ml,
     waterReminderEnabled: row.water_reminder_enabled,
@@ -78,6 +89,12 @@ function mapPrefs(row: {
     sleepTargetBedtime,
     activePauseEnabled: row.active_pause_enabled,
     activePauseIntervalMinutes: row.active_pause_interval_minutes,
+    workoutMinutesPerDay:
+      typeof row.workout_minutes_per_day === "number"
+        ? row.workout_minutes_per_day
+        : DEFAULT_HABIT_PREFS.workoutMinutesPerDay,
+    workoutWeekdays:
+      weekdays.length > 0 ? weekdays : DEFAULT_HABIT_PREFS.workoutWeekdays,
   };
 }
 
@@ -111,13 +128,13 @@ export async function getTodayRitualAction(): Promise<
     supabase
       .from("user_habit_prefs")
       .select(
-        "water_goal_ml, water_reminder_enabled, sleep_reminder_enabled, sleep_target_bedtime, active_pause_enabled, active_pause_interval_minutes",
+        "water_goal_ml, water_reminder_enabled, sleep_reminder_enabled, sleep_target_bedtime, active_pause_enabled, active_pause_interval_minutes, workout_minutes_per_day, workout_weekdays",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
       .from("habit_logs")
-      .select("kind, value, sleep_quality, content_id")
+      .select("kind, value, sleep_quality, content_id, distance_m")
       .eq("user_id", user.id)
       .eq("day", day),
     hasRemindersConsent(supabase, user.id),
@@ -140,6 +157,8 @@ export async function getTodayRitualAction(): Promise<
   let activePauseCount = 0;
   let workoutCount = 0;
   let mealCount = 0;
+  let cardioMinutes = 0;
+  let cardioDistanceM = 0;
 
   for (const log of logs) {
     if (log.kind === "water") {
@@ -161,6 +180,13 @@ export async function getTodayRitualAction(): Promise<
       workoutCount += 1;
     } else if (log.kind === "meal") {
       mealCount += 1;
+    } else if (log.kind === "cardio") {
+      if (typeof log.value === "number") {
+        cardioMinutes += Math.max(0, Math.round(log.value));
+      }
+      if (typeof log.distance_m === "number") {
+        cardioDistanceM += Math.max(0, Math.round(log.distance_m));
+      }
     }
   }
 
@@ -174,10 +200,12 @@ export async function getTodayRitualAction(): Promise<
       sleep,
       activePauseDone: activePauseCount > 0,
       activePauseCount,
-      workoutDone: workoutCount > 0,
+      workoutDone: workoutCount > 0 || cardioMinutes > 0,
       mealDone: mealCount > 0,
       workoutCount,
       mealCount,
+      cardioMinutes,
+      cardioDistanceM,
       hasRemindersConsent: consent,
     },
   };
@@ -433,6 +461,8 @@ export async function listSafeActivePauseExercisesAction(): Promise<
         description: string;
         equipment_tags: string[] | null;
         target_muscles: string[] | null;
+        intensity_tags: string[] | null;
+        estimated_duration_minutes: number | null;
         image_paths: string[] | null;
       }) => {
         const paths = row.image_paths ?? [];
@@ -447,6 +477,8 @@ export async function listSafeActivePauseExercisesAction(): Promise<
           description: row.description,
           equipmentTags: row.equipment_tags ?? [],
           targetMuscles: row.target_muscles ?? [],
+          intensityTags: row.intensity_tags ?? [],
+          estimatedDurationMinutes: row.estimated_duration_minutes ?? 3,
           imageSrc,
         };
       },
@@ -462,6 +494,8 @@ export async function updateHabitPrefsFromAppAction(input: {
   sleepTargetBedtime?: string | null;
   activePauseEnabled: boolean;
   activePauseIntervalMinutes: number;
+  workoutMinutesPerDay?: number;
+  workoutWeekdays?: number[];
 }): Promise<HabitsActionResult> {
   const { supabase, user } = await requireUser();
   if (!user) {
@@ -480,6 +514,24 @@ export async function updateHabitPrefsFromAppAction(input: {
     return { ok: false, code: "invalid_interval" };
   }
 
+  const workoutMinutes =
+    typeof input.workoutMinutesPerDay === "number"
+      ? Math.round(input.workoutMinutesPerDay)
+      : DEFAULT_HABIT_PREFS.workoutMinutesPerDay;
+  if (workoutMinutes < 5 || workoutMinutes > 120) {
+    return { ok: false, code: "invalid_workout_minutes" };
+  }
+
+  const weekdays = Array.isArray(input.workoutWeekdays)
+    ? Array.from(
+        new Set(
+          input.workoutWeekdays.filter(
+            (day) => Number.isInteger(day) && day >= 0 && day <= 6,
+          ),
+        ),
+      ).sort((a, b) => a - b)
+    : DEFAULT_HABIT_PREFS.workoutWeekdays;
+
   let sleepTarget: string | null = null;
   if (input.sleepTargetBedtime && input.sleepTargetBedtime.trim()) {
     const raw = input.sleepTargetBedtime.trim();
@@ -493,6 +545,8 @@ export async function updateHabitPrefsFromAppAction(input: {
     sleep_target_bedtime: sleepTarget,
     active_pause_enabled: input.activePauseEnabled,
     active_pause_interval_minutes: Math.round(input.activePauseIntervalMinutes),
+    workout_minutes_per_day: workoutMinutes,
+    workout_weekdays: weekdays,
   };
 
   const { data: existingPrefs } = await supabase
@@ -521,6 +575,65 @@ export async function updateHabitPrefsFromAppAction(input: {
 
   revalidateHabits();
   return { ok: true };
+}
+
+export async function logCardioAction(input: {
+  mode: "walk" | "run";
+  minutes: number;
+  distanceM?: number | null;
+}): Promise<
+  HabitsActionResult<{ minutes: number; distanceM: number; mode: string }>
+> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  if (input.mode !== "walk" && input.mode !== "run") {
+    return { ok: false, code: "invalid_mode" };
+  }
+
+  const minutes = Math.round(input.minutes);
+  if (!Number.isFinite(minutes) || minutes < 1 || minutes > 300) {
+    return { ok: false, code: "invalid_minutes" };
+  }
+
+  let distanceM: number | null = null;
+  if (input.distanceM != null && input.distanceM !== undefined) {
+    const raw = Math.round(Number(input.distanceM));
+    if (!Number.isFinite(raw) || raw < 0 || raw > 100000) {
+      return { ok: false, code: "invalid_distance" };
+    }
+    distanceM = raw;
+  }
+
+  const day = todayInSaoPaulo();
+  const { error } = await supabase.from("habit_logs").upsert(
+    {
+      user_id: user.id,
+      day,
+      kind: "cardio",
+      value: minutes,
+      content_id: null,
+      content_key: input.mode,
+      distance_m: distanceM,
+      meal_slot: null,
+      note: null,
+    },
+    { onConflict: "user_id,day,kind,content_key" },
+  );
+
+  if (error) {
+    console.error("logCardioAction", error.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  await syncCareAfterHabit(supabase, user.id);
+  revalidateHabits();
+  return {
+    ok: true,
+    data: { minutes, distanceM: distanceM ?? 0, mode: input.mode },
+  };
 }
 
 export async function acceptHabitRemindersConsentAction(

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getAccountSnapshotAction } from "@/app/actions/account";
+import { getTodayRitualAction } from "@/app/actions/habits";
 import {
   getCycleAccountSnapshotAction,
   getMyHealthEditSnapshotAction,
@@ -15,7 +16,10 @@ import { InstallPwaPanel } from "@/components/account/install-pwa-panel";
 import { NutritionEditPanel } from "@/components/account/nutrition-edit-panel";
 import { PublicProfileForm } from "@/components/account/public-profile-form";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { HabitPrefsForm } from "@/components/habits/habit-prefs-form";
+import { HabitRemindersOptIn } from "@/components/habits/habit-reminders-opt-in";
 import { AppTopBar } from "@/components/layout/app-top-bar";
+import { WorkoutAvailabilityForm } from "@/components/plans/workout-availability-form";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Surface } from "@/components/ui/surface";
 import { accountCopy } from "@/lib/i18n/account-pt-br";
@@ -32,10 +36,11 @@ export default async function AccountPage() {
     redirect("/login?next=/account");
   }
 
-  const [snapshot, healthResult, cycleResult] = await Promise.all([
+  const [snapshot, healthResult, cycleResult, ritualResult] = await Promise.all([
     getAccountSnapshotAction(),
     getMyHealthEditSnapshotAction(),
     getCycleAccountSnapshotAction(),
+    getTodayRitualAction(),
   ]);
 
   if (!snapshot.ok) {
@@ -50,6 +55,7 @@ export default async function AccountPage() {
   const data = snapshot.data;
   const health = healthResult.ok ? healthResult.data : null;
   const cycle = cycleResult.ok ? cycleResult.data : null;
+  const ritual = ritualResult.ok ? ritualResult.data : null;
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -102,6 +108,17 @@ export default async function AccountPage() {
         </section>
       ) : null}
 
+      {ritual ? (
+        <section className="space-y-4" id="habits-prefs">
+          <WorkoutAvailabilityForm initial={ritual.prefs} />
+          <HabitPrefsForm initial={ritual.prefs} />
+          <HabitRemindersOptIn
+            initiallyConsented={ritual.hasRemindersConsent}
+            prefs={ritual.prefs}
+          />
+        </section>
+      ) : null}
+
       <div id="cycle-calendar">
         <CycleCalendarPanel
           snapshot={cycle}
@@ -117,10 +134,10 @@ export default async function AccountPage() {
       <InstallPwaPanel />
 
       <Link
-        href="/habits"
+        href="/progress"
         className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
       >
-        {accountCopy.habitsLink}
+        Ver progresso
       </Link>
 
       <div className="flex justify-center">

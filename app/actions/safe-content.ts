@@ -19,6 +19,8 @@ export interface SafeExerciseCard {
   description: string;
   equipmentTags: string[];
   targetMuscles: string[];
+  intensityTags: string[];
+  estimatedDurationMinutes: number;
   imageSrc: string | null;
 }
 
@@ -65,6 +67,8 @@ export async function listSafeExercisesForMeAction(): Promise<
       description: string;
       equipment_tags: string[] | null;
       target_muscles: string[] | null;
+      intensity_tags: string[] | null;
+      estimated_duration_minutes: number | null;
       image_paths: string[] | null;
     }) => {
       const paths = row.image_paths ?? [];
@@ -79,6 +83,8 @@ export async function listSafeExercisesForMeAction(): Promise<
         description: row.description,
         equipmentTags: row.equipment_tags ?? [],
         targetMuscles: row.target_muscles ?? [],
+        intensityTags: row.intensity_tags ?? [],
+        estimatedDurationMinutes: row.estimated_duration_minutes ?? 5,
         imageSrc,
       };
     },

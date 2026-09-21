@@ -60,6 +60,8 @@ export function HabitPrefsForm({ initial }: HabitPrefsFormProps) {
         sleepTargetBedtime: sleepBedtime || null,
         activePauseEnabled: activePause,
         activePauseIntervalMinutes: interval,
+        workoutMinutesPerDay: initial.workoutMinutesPerDay,
+        workoutWeekdays: initial.workoutWeekdays,
       });
 
       if (!result.ok) {

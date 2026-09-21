@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-  IconHabits,
   IconHome,
+  IconMeal,
   IconPair,
-  IconPerson,
+  IconProgress,
   IconRoutine,
 } from "@/components/brand/soft-icons";
 import { appCopy } from "@/lib/i18n/app-pt-br";
@@ -15,9 +15,9 @@ import { appCopy } from "@/lib/i18n/app-pt-br";
 const items = [
   { href: "/home", label: appCopy.nav.home, Icon: IconHome },
   { href: "/workouts", label: appCopy.nav.move, Icon: IconRoutine },
-  { href: "/habits", label: appCopy.nav.habits, Icon: IconHabits },
+  { href: "/meals", label: appCopy.nav.eat, Icon: IconMeal },
   { href: "/circle", label: appCopy.nav.circle, Icon: IconPair },
-  { href: "/account", label: appCopy.nav.account, Icon: IconPerson },
+  { href: "/progress", label: appCopy.nav.progress, Icon: IconProgress },
 ] as const;
 
 export function AppBottomNav() {

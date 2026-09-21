@@ -18,6 +18,8 @@ export const adminCopy = {
   formEditTitle: "Editar exercício",
   titleLabel: "Título",
   descriptionLabel: "Como fazer (passo a passo simples)",
+  durationLabel: "Duração estimada (minutos)",
+  durationHint: "Usada no plano diário para caber no tempo disponível da pessoa.",
   equipmentLegend: "Equipamento",
   capabilityLegend: "Capacidades necessárias",
   capabilityHint:
@@ -45,6 +47,7 @@ export const adminCopy = {
   invalidTitle: "O título precisa ter entre 3 e 120 caracteres.",
   invalidDescription: "A descrição precisa ter pelo menos 10 caracteres.",
   invalidVideo: "Informe um link de vídeo válido (http ou https).",
+  invalidDuration: "Informe uma duração entre 1 e 60 minutos.",
   invalidMealSlot: "Escolha o momento da refeição.",
   invalidIngredients: "Inclua ao menos um ingrediente com item e quantidade.",
   mealsListTitle: "Biblioteca de refeições",

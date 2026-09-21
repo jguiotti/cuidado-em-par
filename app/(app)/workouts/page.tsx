@@ -9,7 +9,9 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { redirectIfTermsRevoked } from "@/lib/account/terms-gate";
 import { accountCopy } from "@/lib/i18n/account-pt-br";
 import { appCopy } from "@/lib/i18n/app-pt-br";
+import { plansCopy } from "@/lib/i18n/plans-pt-br";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 export default async function WorkoutsPage() {
   await redirectIfTermsRevoked();
@@ -63,6 +65,12 @@ export default async function WorkoutsPage() {
         <p className="text-sm font-medium text-mint-deep" aria-live="polite">
           {appCopy.move.todayCount(doneCount)}
         </p>
+        <Link
+          href="/home"
+          className="focus-ring inline-flex min-h-10 items-center text-sm font-semibold text-mint-deep"
+        >
+          {plansCopy.movement.title}
+        </Link>
       </div>
 
       <section className="surface-raised space-y-3 p-5">

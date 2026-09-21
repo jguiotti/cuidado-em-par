@@ -9,8 +9,10 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { redirectIfTermsRevoked } from "@/lib/account/terms-gate";
 import { accountCopy } from "@/lib/i18n/account-pt-br";
 import { appCopy } from "@/lib/i18n/app-pt-br";
+import { plansCopy } from "@/lib/i18n/plans-pt-br";
 import { MEAL_SLOT_VALUES, type MealSlot } from "@/lib/tags/constants";
 import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
 
 interface MealsPageProps {
   searchParams: Promise<{ slot?: string }>;
@@ -80,6 +82,12 @@ export default async function MealsPage({ searchParams }: MealsPageProps) {
         <p className="text-sm font-medium text-mint-deep" aria-live="polite">
           {appCopy.eat.todayCount(doneCount)}
         </p>
+        <Link
+          href="/home"
+          className="focus-ring inline-flex min-h-10 items-center text-sm font-semibold text-mint-deep"
+        >
+          {plansCopy.meals.title}
+        </Link>
       </div>
 
       <section className="surface-raised space-y-3 p-5">

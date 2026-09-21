@@ -40,7 +40,7 @@ export function deriveCareEventKinds(input: {
       hasSleep = true;
     } else if (log.kind === "active-pause") {
       hasPause = true;
-    } else if (log.kind === "workout") {
+    } else if (log.kind === "workout" || log.kind === "cardio") {
       workoutCount += 1;
     } else if (log.kind === "meal") {
       mealCount += 1;

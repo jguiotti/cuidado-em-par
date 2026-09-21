@@ -209,6 +209,18 @@ async function applyRevocationSideEffects(
   userId: string,
   purpose: AccountConsentPurpose,
 ) {
+  if (purpose === "biometrics") {
+    await supabase
+      .from("user_body_measurements")
+      .delete()
+      .eq("user_id", userId);
+    await supabase
+      .from("user_biometrics")
+      .update({ weight_kg: null })
+      .eq("user_id", userId);
+    return;
+  }
+
   if (purpose === "health_personalization") {
     await supabase
       .from("user_clinical_conditions")
@@ -218,20 +230,13 @@ async function applyRevocationSideEffects(
       .from("user_nutrition_profiles")
       .delete()
       .eq("user_id", userId);
+    await supabase.from("user_daily_plans").delete().eq("user_id", userId);
     return;
   }
 
   if (purpose === "cycle_module") {
     await supabase.from("cycle_period_logs").delete().eq("user_id", userId);
     await supabase.from("user_cycle_profiles").delete().eq("user_id", userId);
-    return;
-  }
-
-  if (purpose === "biometrics") {
-    await supabase
-      .from("user_biometrics")
-      .update({ weight_kg: null })
-      .eq("user_id", userId);
     return;
   }
 
@@ -335,6 +340,8 @@ export async function exportMyDataAction(): Promise<
     cycle,
     cycleLogs,
     biometrics,
+    bodyMeasurements,
+    dailyPlans,
     habitPrefs,
     habitLogs,
   ] = await Promise.all([
@@ -378,15 +385,29 @@ export async function exportMyDataAction(): Promise<
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
+      .from("user_body_measurements")
+      .select("recorded_on, weight_kg, waist_cm, hip_cm, created_at")
+      .eq("user_id", user.id)
+      .order("recorded_on", { ascending: true }),
+    supabase
+      .from("user_daily_plans")
+      .select(
+        "day, exercise_ids, meals, is_rest_day, cardio_suggestion, created_at, updated_at",
+      )
+      .eq("user_id", user.id)
+      .order("day", { ascending: true }),
+    supabase
       .from("user_habit_prefs")
       .select(
-        "water_goal_ml, water_reminder_enabled, sleep_reminder_enabled, sleep_target_bedtime, active_pause_enabled, active_pause_interval_minutes",
+        "water_goal_ml, water_reminder_enabled, sleep_reminder_enabled, sleep_target_bedtime, active_pause_enabled, active_pause_interval_minutes, workout_minutes_per_day, workout_weekdays",
       )
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
       .from("habit_logs")
-      .select("day, kind, value, sleep_quality, content_id, created_at")
+      .select(
+        "day, kind, value, sleep_quality, content_id, content_key, distance_m, meal_slot, note, created_at",
+      )
       .eq("user_id", user.id)
       .order("day", { ascending: true }),
   ]);
@@ -399,6 +420,8 @@ export async function exportMyDataAction(): Promise<
     cycle.error ||
     cycleLogs.error ||
     biometrics.error ||
+    bodyMeasurements.error ||
+    dailyPlans.error ||
     habitPrefs.error ||
     habitLogs.error
   ) {
@@ -420,6 +443,8 @@ export async function exportMyDataAction(): Promise<
     cycle: cycle.data,
     cycle_period_logs: cycleLogs.data ?? [],
     biometrics: biometrics.data,
+    body_measurements: bodyMeasurements.data ?? [],
+    daily_plans: dailyPlans.data ?? [],
     habit_prefs: habitPrefs.data,
     habit_logs: habitLogs.data ?? [],
   };

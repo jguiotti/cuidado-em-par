@@ -4,6 +4,7 @@ import { getTodayRitualAction } from "@/app/actions/habits";
 import { HabitPrefsForm } from "@/components/habits/habit-prefs-form";
 import { HabitRemindersOptIn } from "@/components/habits/habit-reminders-opt-in";
 import { AppTopBar } from "@/components/layout/app-top-bar";
+import { WorkoutAvailabilityForm } from "@/components/plans/workout-availability-form";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { appCopy } from "@/lib/i18n/app-pt-br";
 import { habitsCopy } from "@/lib/i18n/habits-pt-br";
@@ -58,6 +59,7 @@ export default async function HabitsPage() {
       </div>
 
       <HabitPrefsForm initial={ritual.prefs} />
+      <WorkoutAvailabilityForm initial={ritual.prefs} />
       <HabitRemindersOptIn
         initiallyConsented={ritual.hasRemindersConsent}
         prefs={ritual.prefs}

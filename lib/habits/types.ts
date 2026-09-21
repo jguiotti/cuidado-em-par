@@ -16,6 +16,8 @@ export interface HabitPrefsSnapshot {
   sleepTargetBedtime: string | null;
   activePauseEnabled: boolean;
   activePauseIntervalMinutes: number;
+  workoutMinutesPerDay: number;
+  workoutWeekdays: number[];
 }
 
 export interface SleepLogSnapshot {
@@ -36,6 +38,8 @@ export interface TodayRitualSnapshot {
   mealDone: boolean;
   workoutCount: number;
   mealCount: number;
+  cardioMinutes: number;
+  cardioDistanceM: number;
   hasRemindersConsent: boolean;
 }
 
@@ -46,4 +50,6 @@ export const DEFAULT_HABIT_PREFS: HabitPrefsSnapshot = {
   sleepTargetBedtime: null,
   activePauseEnabled: true,
   activePauseIntervalMinutes: 90,
+  workoutMinutesPerDay: 20,
+  workoutWeekdays: [1, 2, 3, 4, 5],
 };

@@ -6,6 +6,7 @@ export const appCopy = {
     habits: "Hábitos",
     circle: "Círculo",
     account: "Perfil",
+    progress: "Progresso",
   },
   move: {
     title: "Rotina de movimento",

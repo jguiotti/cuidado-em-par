@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ChartNoAxesColumn,
   Check,
   Clock,
   Droplets,
@@ -87,4 +88,8 @@ export function IconClock(props: AppIconProps) {
 
 export function IconMeal(props: AppIconProps) {
   return <Utensils {...withDefaults(props)} />;
+}
+
+export function IconProgress(props: AppIconProps) {
+  return <ChartNoAxesColumn {...withDefaults(props)} />;
 }

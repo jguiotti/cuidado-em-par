@@ -43,6 +43,7 @@ function mapRow(row: {
   target_muscles: string[];
   video_url: string | null;
   image_paths: string[];
+  estimated_duration_minutes?: number | null;
   is_published: boolean;
   updated_at: string;
 }): ExerciseAdminRow {
@@ -57,6 +58,7 @@ function mapRow(row: {
     targetMuscles: row.target_muscles ?? [],
     videoUrl: row.video_url,
     imagePaths: row.image_paths ?? [],
+    estimatedDurationMinutes: row.estimated_duration_minutes ?? 5,
     isPublished: row.is_published,
     updatedAt: row.updated_at,
   };
@@ -73,6 +75,7 @@ function toDbPayload(value: ExerciseFormInput, userId: string) {
     target_muscles: value.targetMuscles,
     video_url: value.videoUrl,
     image_paths: value.imagePaths,
+    estimated_duration_minutes: value.estimatedDurationMinutes,
     created_by: userId,
   };
 }
@@ -97,7 +100,7 @@ export async function listAdminExercisesAction(): Promise<
   const { data, error } = await supabase
     .from("exercises_library")
     .select(
-      "id, title, description, equipment_tags, contraindication_tags, required_capability_tags, intensity_tags, target_muscles, video_url, image_paths, is_published, updated_at",
+      "id, title, description, equipment_tags, contraindication_tags, required_capability_tags, intensity_tags, target_muscles, video_url, image_paths, estimated_duration_minutes, is_published, updated_at",
     )
     .order("updated_at", { ascending: false });
 
@@ -126,7 +129,7 @@ export async function getAdminExerciseAction(
   const { data, error } = await supabase
     .from("exercises_library")
     .select(
-      "id, title, description, equipment_tags, contraindication_tags, required_capability_tags, intensity_tags, target_muscles, video_url, image_paths, is_published, updated_at",
+      "id, title, description, equipment_tags, contraindication_tags, required_capability_tags, intensity_tags, target_muscles, video_url, image_paths, estimated_duration_minutes, is_published, updated_at",
     )
     .eq("id", id)
     .maybeSingle();

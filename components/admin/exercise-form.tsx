@@ -62,6 +62,9 @@ export function ExerciseForm({ mode, initial }: ExerciseFormProps) {
     initial?.targetMuscles ?? [],
   );
   const [imagePaths, setImagePaths] = useState(initial?.imagePaths ?? []);
+  const [estimatedDurationMinutes, setEstimatedDurationMinutes] = useState(
+    String(initial?.estimatedDurationMinutes ?? 5),
+  );
   const [isPublished, setIsPublished] = useState(initial?.isPublished ?? false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -119,6 +122,7 @@ export function ExerciseForm({ mode, initial }: ExerciseFormProps) {
       targetMuscles,
       videoUrl: videoUrl.trim() ? videoUrl.trim() : null,
       imagePaths,
+      estimatedDurationMinutes: Number(estimatedDurationMinutes) || 5,
     };
   }
 
@@ -134,6 +138,8 @@ export function ExerciseForm({ mode, initial }: ExerciseFormProps) {
         return adminCopy.invalidDescription;
       case "invalid_video":
         return adminCopy.invalidVideo;
+      case "invalid_duration":
+        return adminCopy.invalidDuration;
       case "forbidden":
         return adminCopy.forbidden;
       default:
@@ -270,6 +276,19 @@ export function ExerciseForm({ mode, initial }: ExerciseFormProps) {
           className="field-control px-4 py-3 text-base font-normal text-ink"
         />
       </label>
+
+      <TextField
+        label={adminCopy.durationLabel}
+        hint={adminCopy.durationHint}
+        name="estimatedDurationMinutes"
+        type="number"
+        min={1}
+        max={60}
+        value={estimatedDurationMinutes}
+        onChange={(event) => setEstimatedDurationMinutes(event.target.value)}
+        disabled={isPending}
+        required
+      />
 
       <TextField
         label={adminCopy.videoLabel}

@@ -82,6 +82,7 @@ export interface ExerciseFormInput {
   targetMuscles: string[];
   videoUrl: string | null;
   imagePaths: string[];
+  estimatedDurationMinutes: number;
 }
 
 export interface ExerciseAdminRow {
@@ -95,6 +96,7 @@ export interface ExerciseAdminRow {
   targetMuscles: string[];
   videoUrl: string | null;
   imagePaths: string[];
+  estimatedDurationMinutes: number;
   isPublished: boolean;
   updatedAt: string;
 }
@@ -154,6 +156,11 @@ export function sanitizeExerciseFormInput(input: ExerciseFormInput): {
     EXERCISE_CONTRAINDICATION_SLUGS,
   );
 
+  const duration = Math.round(Number(input.estimatedDurationMinutes) || 5);
+  if (duration < 1 || duration > 60) {
+    return { ok: false, code: "invalid_duration" };
+  }
+
   const value: ExerciseFormInput = {
     title,
     description,
@@ -167,6 +174,7 @@ export function sanitizeExerciseFormInput(input: ExerciseFormInput): {
     targetMuscles: filterAllowed(input.targetMuscles, EXERCISE_MUSCLE_SLUGS),
     videoUrl,
     imagePaths: input.imagePaths.filter((path) => path.startsWith("exercises/")),
+    estimatedDurationMinutes: duration,
   };
 
   return { ok: true, value };

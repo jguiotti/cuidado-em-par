@@ -38,6 +38,8 @@ const payload: AccountExportPayload = {
   cycle: null,
   cycle_period_logs: [],
   biometrics: null,
+  body_measurements: [],
+  daily_plans: [],
   habit_prefs: null,
   habit_logs: [],
 };
@@ -59,6 +61,8 @@ const requiredKeys = [
   "cycle",
   "cycle_period_logs",
   "biometrics",
+  "body_measurements",
+  "daily_plans",
   "habit_prefs",
   "habit_logs",
 ];
