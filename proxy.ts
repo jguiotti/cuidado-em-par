@@ -1,0 +1,70 @@
+import { type NextRequest, NextResponse } from "next/server";
+
+import { updateSession } from "@/lib/supabase/middleware";
+
+const publicPaths = new Set(["/", "/login", "/terms"]);
+
+function isPublicPath(pathname: string) {
+  if (publicPaths.has(pathname)) {
+    return true;
+  }
+  if (pathname.startsWith("/auth/")) {
+    return true;
+  }
+  return false;
+}
+
+function isAdminPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+function isAppPath(pathname: string) {
+  return (
+    pathname.startsWith("/home") ||
+    pathname.startsWith("/onboarding") ||
+    pathname.startsWith("/workouts") ||
+    pathname.startsWith("/meals") ||
+    pathname.startsWith("/habits") ||
+    pathname.startsWith("/circle") ||
+    pathname.startsWith("/account")
+  );
+}
+
+export async function proxy(request: NextRequest) {
+  const { supabase, user, response } = await updateSession(request);
+  const { pathname } = request.nextUrl;
+
+  if (isPublicPath(pathname)) {
+    if (user && (pathname === "/login" || pathname === "/")) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/home";
+      return NextResponse.redirect(redirectUrl);
+    }
+    return response;
+  }
+
+  if (!user && (isAppPath(pathname) || isAdminPath(pathname))) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/login";
+    redirectUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isAdminPath(pathname)) {
+    const { data: isAdmin, error } = await supabase.rpc("is_admin");
+
+    if (error || isAdmin !== true) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = "/home";
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};

@@ -1,0 +1,41 @@
+---
+description: Implementar uma funcionalidade já planejada, na ordem da squad
+---
+
+# /implementar
+
+Traduz um plano já aprovado em código no Next.js e no Supabase. Se não houver plano (tags, RLS, aceite, copy), execute `/nova-feature` primeiro e pare.
+
+## Antes de responder
+Leia:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/01-gerente-de-tecnologia.mdc`
+3. `.cursor/rules/05-arquiteto.mdc`
+4. `.cursor/rules/07-desenvolvedor-backend.mdc`
+5. `.cursor/rules/08-desenvolvedor-frontend.mdc`
+6. `.cursor/rules/06-devops.mdc` se houver env, PWA, CI ou secret
+7. `.cursor/rules/10-especialista-lgpd.mdc` se a tarefa tocar dado sensível
+8. Regras clínicas (`11` e/ou `12`) se a tarefa tocar treino ou comida
+
+Siga o plano da conversa ou do arquivo indicado pela pessoa usuária. Não reabra o problema de produto sem inconsistência grave.
+
+## Ordem de código
+1. Migração: tabelas, comentários, RLS granular, índices de tags e de `user_id`.
+2. Server Actions / queries com `auth.uid()`, filtro de tags, erro sem vazamento.
+3. Auditoria de consentimento se houver coleta nova.
+4. UI mobile-first com tokens do Santuário Digital, textos do UX Writer, Server Components por padrão.
+5. Estados vazio, carregando, erro, recusa de consentimento.
+6. Testes ou checklist do QA para bloqueio clínico e RLS cruzado.
+
+## Regras
+- Zero emoji. Linguagem inclusiva.
+- Sem IA generativa montando treino ou dieta.
+- Service role só no servidor.
+- Dado clínico fora de URL, log e perfil público.
+- Se faltar tag, copy ou base legal, parar e dizer quem precisa responder.
+
+## Saída
+- O que foi implementado, por arquivo
+- O que ficou pendente e de qual persona
+- Como validar (casos mínimos do QA)
+- Risco residual clínico ou de privacidade

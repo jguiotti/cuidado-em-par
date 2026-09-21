@@ -1,0 +1,46 @@
+---
+description: Contexto geral do projeto — ler sempre antes de qualquer tarefa
+alwaysApply: true
+---
+
+# Contexto do Projeto — Cuidado em Par
+
+## Objetivo
+Democratizar o acesso à saúde preventiva e ao bem-estar físico e mental. A plataforma é PWA mobile-first, totalmente adaptável, de baixo custo e radicalmente inclusiva. Manter uma vida saudável não exige mensalidade cara, dieta inacessível nem promessa milagrosa: exige consistência, acolhimento e rotinas inteligentes.
+
+## Motor do produto (inegociável)
+Não usar inteligência artificial generativa para montar treinos, dietas ou diagnósticos. A inteligência do sistema é o cruzamento relacional de dados: tags de restrição do perfil versus tags de conteúdo (exercício, receita, hábito). Em dúvida clínica, bloquear. Nunca improvisar.
+
+## Pilares
+1. **Inclusão radical e segurança clínica:** PCD, lesões (LCA, hérnia, condromalácia), comunidade LGBT+, restrições clínicas. O cadastro alimenta um filtro intransigente: atividade de risco não chega à pessoa usuária.
+2. **Saúde financeiramente acessível:** calistenia, peso corporal e itens domésticos (garrafa, cadeira, toalha, saco de alimento). Nutrição com ingredientes de alto rendimento e baixo custo (ovos, aveia, raízes, leguminosas, vegetais da estação), inclusive com doença celíaca, lactose e veganismo.
+3. **Acompanhamento fisiológico dinâmico:** ciclo menstrual e gestação alteram intensidade, metabolismo e articulação. Ajustar rotina antes, durante e após a gravidez.
+4. **Consistência, hábitos e prevenção:** água, **sono** e pausa ativa (cinco minutos de movimento a cada noventa minutos de trabalho).
+5. **Santuário digital (neurodesign):** Verde Menta e Warm Blush, zero bordas duras (`1px solid`), tonal layering, alto contraste, baixa carga cognitiva, acessível a pessoas neurodivergentes.
+6. **Cuidado coletivo:** grupos, clãs ou duplas; gamificação leve de consistência, nunca de estética corporal.
+7. **Soberania de dados (LGPD):** perfil público isolado de dados sensíveis (clínica, ciclo, biometria). Consentimento auditável desde o primeiro acesso.
+
+## Linguagem (inegociável)
+- Zero emojis no código, na interface e nas respostas.
+- Linguagem inclusiva e neutra. Sem pronomes binários. Preferir: pessoa usuária, quem desenvolve, seu perfil, boas-vindas.
+- Sem jargão, sem culpabilização, sem promessa milagrosa.
+- **Código e banco em inglês; textos de interface em português do Brasil.** Ver `.cursor/rules/13-coding-standards.mdc`.
+
+## Stack
+- Next.js (App Router), React, Tailwind CSS.
+- Supabase (PostgreSQL) com RLS estrito.
+- Vercel para frontend e rotas de API.
+- Separação total entre dados públicos e dados sensíveis.
+
+## Arquitetura do MVP
+Fonte da verdade do modelo de dados, motor de tags, onboarding e RLS: `docs/arquitetura-e-regras-de-negocio.md`.
+
+## Como usar a squad
+Ative uma persona com `@` no arquivo da regra (ex.: `@01-gerente-de-tecnologia`) ou use um comando em `.cursor/commands/`.
+Leia a regra da persona antes de responder no papel dela. Não escreva código em comandos de planejamento, salvo pedido explícito.
+
+Personas: Gerente de Tecnologia, Product Manager, Designer UX, UX Writer, Arquiteto, DevOps, Backend, Frontend, QA, Especialista LGPD, Educador Físico, Nutricionista.
+
+Padrão técnico: `.cursor/rules/13-coding-standards.mdc` (sempre ativo).
+
+Comandos: `/nova-feature`, `/implementar`, `/revisao-clinica-lgpd`, `/revisao-ux`, `/revisao-qa`, `/auditoria-motor`.

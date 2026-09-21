@@ -1,0 +1,36 @@
+---
+description: Auditar o motor relacional de tags de treino e alimentação
+---
+
+# /auditoria-motor
+
+Use quando o cadastro, a biblioteca de exercícios, as receitas ou o filtro de segurança mudarem. O motor não é IA: é cruzamento de tags. Esta auditoria existe para achar furo nesse cruzamento.
+
+## Antes de responder
+Leia:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/11-educador-fisico.mdc`
+3. `.cursor/rules/12-nutricionista.mdc`
+4. `.cursor/rules/05-arquiteto.mdc`
+5. `.cursor/rules/07-desenvolvedor-backend.mdc`
+6. `.cursor/rules/09-qa.mdc`
+
+Se o código ou a migração existirem, leia também as queries e as tabelas de tags.
+
+## O que auditar
+- Taxonomia: nomes estáveis, sem sinônimo solto (`alto-impacto` ≠ `impacto alto`).
+- Completude: cada restrição de cadastro tem bloqueios explícitos.
+- Determinismo: a mesma pessoa, com as mesmas tags, recebe o mesmo conjunto seguro.
+- Falso seguro: conteúdo sem tag passa o filtro e chega a quem não pode.
+- Falso restritivo: conteúdo seguro some sem motivo e prejudica inclusão (PCD, baixo custo, sentado).
+- Equipamento: só peso corporal e itens domésticos, salvo tag explícita e opcional.
+- Custo alimentar: receita cara não pode ser default.
+- Ciclo e gestação: modulam intensidade ou alimento sem expor o dado em superfície pública.
+- Query: o bloqueio acontece no banco (`NOT tags @>` ou equivalente), não só na UI.
+
+## Saída
+- Mapa restrição → tags bloqueadas → tags permitidas
+- Furos (conteúdo sem tag, tag órfã, query só no cliente)
+- Correções obrigatórias para Arquiteto e Backend
+- Matriz mínima de QA (perfis sintéticos versus conteúdos)
+- Parecer: motor seguro / motor inseguro até correção

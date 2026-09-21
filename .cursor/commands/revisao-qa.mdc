@@ -1,0 +1,34 @@
+---
+description: Montar plano de teste e critério de pronto da funcionalidade
+---
+
+# /revisao-qa
+
+Gera o plano de qualidade que libera ou bloqueia a entrega. Pode rodar sobre um plano (`/nova-feature`) ou sobre código já escrito.
+
+## Antes de responder
+Leia:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/09-qa.mdc`
+3. `.cursor/rules/02-product-manager.mdc`
+4. `.cursor/rules/11-educador-fisico.mdc` e/ou `.cursor/rules/12-nutricionista.mdc` se couber
+5. `.cursor/rules/10-especialista-lgpd.mdc` se houver dado
+6. `.cursor/rules/08-desenvolvedor-frontend.mdc` para PWA e a11y
+
+Use massa sintética. Proíba dado real de saúde.
+
+## O que cobrir
+1. Aceite de produto (PM): a feature entrega o hábito, não a estética.
+2. Falso seguro: exercício ou alimento que deveria estar bloqueado.
+3. RLS cruzado e consentimento recusado.
+4. Acessibilidade e linguagem (emoji, binário, culpa).
+5. PWA: instalação, offline sem cache íntimo, pausa ativa se fizer parte.
+6. Estados vazios e erro de rede.
+
+## Saída
+- Casos numerados: pré-condição (tags), ação, esperado
+- Gravidade: crítica / alta / média
+- Automatizável versus checklist manual
+- Critério de pronto (Definition of Done)
+- O que bloqueia release agora
+- Handoff para Backend, Frontend, Educador, Nutricionista ou LGPD

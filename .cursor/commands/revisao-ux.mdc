@@ -1,0 +1,41 @@
+---
+description: Revisar Santuário Digital, acessibilidade e linguagem inclusiva
+---
+
+# /revisao-ux
+
+Use para auditar telas, componentes e textos. Não reescreve regra clínica; se o conteúdo de treino ou dieta estiver errado, encaminhe para `/revisao-clinica-lgpd`.
+
+## Antes de responder
+Leia:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/03-designer-ux.mdc`
+3. `.cursor/rules/04-ux-writer.mdc`
+4. `.cursor/rules/08-desenvolvedor-frontend.mdc`
+5. `.cursor/rules/09-qa.mdc` (parte de acessibilidade e linguagem)
+
+## Checklist visual
+- [ ] Verde Menta e Warm Blush como base, alto contraste
+- [ ] Zero borda dura `1px solid`; separação por tonal layering
+- [ ] Mobile-first, área de toque confortável, uma ação principal por tela
+- [ ] Estados vazio, carregando, erro e sucesso existem e não culpam a pessoa
+- [ ] Dado clínico não aparece como badge público, ranking ou card de clã
+
+## Checklist de linguagem
+- [ ] Zero emojis
+- [ ] Sem pronome binário; termos: pessoa usuária, seu perfil, boas-vindas
+- [ ] Sem culpa, milagre, “modo homem/mulher”, estética punitiva
+- [ ] Consentimento em linguagem clara, não persuasiva
+- [ ] Erros dizem o que aconteceu e o que fazer agora
+
+## Checklist de acessibilidade
+- [ ] Nomes acessíveis, foco visível, teclado
+- [ ] Não depende só de cor
+- [ ] Respeita redução de movimento
+- [ ] Funciona para PCD (não exige visão, duas mãos ou posição em pé sem alternativa)
+
+## Saída
+- Achados por tela, com gravidade (bloqueia / ajusta / nitidez)
+- Texto substituto quando a copy falhar (no papel de UX Writer)
+- Ajuste de token/componente para o Frontend
+- O que está aprovado para seguir

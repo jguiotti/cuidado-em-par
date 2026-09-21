@@ -1,0 +1,44 @@
+---
+description: Revisar cruzamento clínico, nutrição e privacidade antes de liberar
+---
+
+# /revisao-clinica-lgpd
+
+Use sempre que a funcionalidade cruzar condição de saúde, lesão, PCD, ciclo, gestação, meta de peso, biometria, receita ou restrição alimentar.
+
+## Antes de responder
+Leia:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/11-educador-fisico.mdc`
+3. `.cursor/rules/12-nutricionista.mdc`
+4. `.cursor/rules/10-especialista-lgpd.mdc`
+5. `.cursor/rules/05-arquiteto.mdc`
+6. `.cursor/rules/07-desenvolvedor-backend.mdc`
+7. `.cursor/rules/09-qa.mdc`
+
+Não elogie o código. Procure falso seguro e vazamento.
+
+## Checklist clínico (movimento)
+- [ ] Lesão, PCD, gestação e demais restrições bloqueiam tags de risco de forma determinística
+- [ ] Não há exercício de alto impacto, pliometria incompatível ou carga axial indevida para o perfil
+- [ ] Pausa ativa respeita o mesmo filtro de segurança
+- [ ] Não existe “treino masculino/feminino”; o recorte é restrição e objetivo
+
+## Checklist clínico (alimentação)
+- [ ] Celíaco, lactose, veganismo e alergias bloqueiam ingrediente e receita
+- [ ] Lista de mercado permanece barata (ovos, aveia, raízes, leguminosas, vegetais da estação)
+- [ ] Gestação e ciclo não recebem milagre metabólico nem alimento inseguro
+
+## Checklist LGPD
+- [ ] Perfil público isolado de clínica, ciclo, gestação e biometria
+- [ ] RLS impede pessoa A de ler o sensível de pessoa B
+- [ ] Consentimento expresso e revogável em auditoria (`lgpd_consent_logs` ou equivalente)
+- [ ] Dado de saúde não está em log, URL, analytics, cache PWA compartilhado nem feed de clã
+- [ ] Minimização: cada campo tem finalidade
+
+## Saída
+- Parecer: aprovado / aprovado com restrição / bloqueado
+- Falhas clínicas com a tag que falta ou que vaza
+- Falhas de privacidade com tabela/política envolvida
+- Correções obrigatórias e persona dona de cada uma
+- Casos de QA que precisam existir antes do release

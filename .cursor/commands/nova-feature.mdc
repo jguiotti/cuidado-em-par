@@ -1,0 +1,40 @@
+---
+description: Planejar uma funcionalidade do zero sem escrever código
+---
+
+# /nova-feature
+
+Orquestra a squad **antes** de qualquer código. Use quando a pessoa usuária descrever uma tela, hábito, treino, receita, grupo ou coleta de dado.
+
+## Antes de responder
+Leia, nesta ordem, com a ferramenta de leitura de arquivos:
+1. `.cursor/rules/00-contexto-do-projeto.mdc`
+2. `.cursor/rules/02-product-manager.mdc`
+3. `.cursor/rules/11-educador-fisico.mdc` se houver movimento, lesão, PCD, ciclo, gestação, pausa ativa ou biometria de treino
+4. `.cursor/rules/12-nutricionista.mdc` se houver comida, mercado, restrição alimentar ou hidratação nutricional
+5. `.cursor/rules/10-especialista-lgpd.mdc` se houver dado novo, consentimento, grupo ou dado já sensível em tela nova
+6. `.cursor/rules/01-gerente-de-tecnologia.mdc`
+7. `.cursor/rules/05-arquiteto.mdc`
+8. `.cursor/rules/03-designer-ux.mdc` e `.cursor/rules/04-ux-writer.mdc`
+9. `.cursor/rules/09-qa.mdc`
+
+Não implemente. Não invente treino nem receita por IA. Motor = tags.
+
+## Fluxo (nesta ordem)
+1. **Product Manager:** problema, para quem, MVP, fora de escopo, aceite.
+2. **Educador Físico e/ou Nutricionista:** tags de bloqueio e permissão, riscos clínicos.
+3. **Especialista LGPD:** classificação do dado, consentimento, RLS, o que não pode ir para perfil público.
+4. **Gerente de Tecnologia:** agentes, tarefas, ordem, riscos de infra.
+5. **Arquiteto:** fronteira público/sensível, tabelas, tags, RLS, contrato da Server Action.
+6. **Designer UX e UX Writer:** fluxo de telas, santuário digital, copy inclusiva, estados.
+7. **QA:** casos que bloqueiam release (falso seguro, vazamento, exclusão).
+
+## Saída
+Documento único com:
+- valor de produto e aceite
+- tags clínicas (se couber)
+- decisão LGPD (aprova / restringe / bloqueia)
+- plano técnico numerado com dono
+- esboço de telas e textos
+- plano de teste
+- próximo comando sugerido (`/implementar` só se o plano estiver coerente)

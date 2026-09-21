@@ -1,0 +1,38 @@
+---
+description: Coding standards — English in code and database, Brazilian Portuguese in user-facing copy
+alwaysApply: true
+---
+
+# Coding standards — Cuidado em Par
+
+## Language split (non-negotiable)
+- **Code and database identifiers:** English only (files, folders, functions, variables, types, SQL tables/columns, constraints, enums, tag **slugs**, commits).
+- **User-facing copy:** Brazilian Portuguese (`pt-BR`), inclusive and neutral (UX Writer). Includes `tags.label`, UI strings, emails, errors shown on screen.
+- **Agent replies to the product team:** Portuguese, as today.
+- Comments in code: English, short, only when the why is non-obvious.
+
+## Naming
+- TypeScript/JavaScript: `camelCase` for values, `PascalCase` for components/types, `UPPER_SNAKE` for true constants.
+- SQL: `snake_case` for tables, columns, functions, indexes.
+- Files/folders: `kebab-case` (e.g. `care-circle`, `habit-prefs`).
+- Boolean names: `is_`, `has_`, `can_` prefixes (`isPublished`, `hasAcceptedConsent`).
+- Tag slugs: English kebab-case (`torn-acl`, `pregnancy-trimester-3`). Never rename a published slug without a migration and Educador/Nutri review.
+- Do not mix languages in one identifier (`userPerfil`, `listaExercises`).
+
+## Database values stored in code
+Stored enum-like values are English, for example:
+- `health_focus`: `quality-of-life` | `physical-preparation` | `maintenance` | `body-composition`
+- `diet_pattern`: `no-restriction` | `vegetarian` | `vegan`
+- `cycle mode`: `menstrual-cycle` | `pregnancy` | `postpartum`
+- habit / care event `kind`: `water` | `active-pause` | `workout` | `meal`
+- `meal_slot`: `breakfast` | `lunch` | `snack` | `dinner`
+
+Map to pt-BR only at the UI boundary (labels, `tags.label`).
+
+## Stack conventions
+- Next.js App Router: Server Components by default; Client Components only for real interactivity.
+- Supabase: validate `auth.uid()` on the server; never expose `SUPABASE_SERVICE_ROLE_KEY` to the client.
+- Prefer named exports for components and pure functions.
+
+## Who enforces
+Arquiteto, Backend, Frontend, DevOps and QA follow this rule on every change. UX Writer owns visible pt-BR strings, not code identifiers.
