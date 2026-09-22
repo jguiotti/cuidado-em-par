@@ -204,6 +204,48 @@ export async function updatePublicProfileAction(input: {
   return { ok: true };
 }
 
+const MIN_PASSWORD_LENGTH = 8;
+
+/**
+ * Sets or replaces the Auth password and marks e-mail as confirmed.
+ * Needed for accounts that started with magic link / OTP and never had
+ * email_confirmed_at — password grant returns 400 until confirmed.
+ */
+export async function updateAccountPasswordAction(input: {
+  password: string;
+}): Promise<AccountActionResult> {
+  const { user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  if (
+    typeof input.password !== "string" ||
+    input.password.length < MIN_PASSWORD_LENGTH
+  ) {
+    return { ok: false, code: "password_too_short" };
+  }
+
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(user.id, {
+      password: input.password,
+      email_confirm: true,
+    });
+
+    if (error) {
+      console.error("updateAccountPasswordAction", error.message);
+      return { ok: false, code: "save_failed" };
+    }
+  } catch (error) {
+    console.error("updateAccountPasswordAction", error);
+    return { ok: false, code: "save_failed" };
+  }
+
+  revalidateAccount();
+  return { ok: true };
+}
+
 async function applyRevocationSideEffects(
   supabase: Awaited<ReturnType<typeof createClient>>,
   userId: string,
@@ -344,6 +386,7 @@ export async function exportMyDataAction(): Promise<
     dailyPlans,
     habitPrefs,
     habitLogs,
+    careNudges,
   ] = await Promise.all([
     supabase
       .from("user_profiles")
@@ -410,6 +453,11 @@ export async function exportMyDataAction(): Promise<
       )
       .eq("user_id", user.id)
       .order("day", { ascending: true }),
+    supabase
+      .from("care_nudges")
+      .select("circle_id, from_user_id, to_user_id, day, created_at")
+      .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
+      .order("day", { ascending: true }),
   ]);
 
   if (
@@ -423,7 +471,8 @@ export async function exportMyDataAction(): Promise<
     bodyMeasurements.error ||
     dailyPlans.error ||
     habitPrefs.error ||
-    habitLogs.error
+    habitLogs.error ||
+    careNudges.error
   ) {
     console.error("exportMyDataAction load failed");
     return { ok: false, code: "load_failed" };
@@ -447,6 +496,7 @@ export async function exportMyDataAction(): Promise<
     daily_plans: dailyPlans.data ?? [],
     habit_prefs: habitPrefs.data,
     habit_logs: habitLogs.data ?? [],
+    care_nudges: careNudges.data ?? [],
   };
 
   const filename = buildExportFilename();

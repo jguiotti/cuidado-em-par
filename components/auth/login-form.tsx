@@ -1,8 +1,9 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
 
-import { IconArrowRight, IconMail } from "@/components/brand/soft-icons";
+import { IconArrowRight, IconLock, IconMail } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
 import { MissingEnvError } from "@/lib/env";
 import { loginCopy } from "@/lib/i18n/brand-pt-br";
@@ -12,53 +13,180 @@ interface LoginFormProps {
   nextPath: string;
 }
 
-function isRateLimited(error: { status?: number; message?: string; code?: string }) {
-  if (error.status === 429) {
-    return true;
+type AuthMode = "sign-in" | "sign-up" | "reset";
+
+const MIN_PASSWORD_LENGTH = 8;
+
+function authErrorMessage(error: {
+  status?: number;
+  message?: string;
+  code?: string;
+  name?: string;
+}): string {
+  const code = (error.code ?? "").toLowerCase();
+  const message = (error.message ?? "").toLowerCase();
+  const haystack = `${code} ${message}`;
+
+  if (
+    haystack.includes("email_not_confirmed") ||
+    haystack.includes("email not confirmed")
+  ) {
+    return loginCopy.emailNotConfirmedSignIn;
   }
-  const haystack = `${error.message ?? ""} ${error.code ?? ""}`.toLowerCase();
-  return (
-    haystack.includes("429") ||
-    haystack.includes("rate") ||
-    haystack.includes("too many") ||
-    haystack.includes("over_email_send_rate_limit")
-  );
+  if (
+    haystack.includes("invalid_credentials") ||
+    haystack.includes("invalid login") ||
+    haystack.includes("invalid_grant")
+  ) {
+    return loginCopy.invalidCredentials;
+  }
+  if (
+    haystack.includes("user_already_exists") ||
+    haystack.includes("already registered") ||
+    haystack.includes("already been registered")
+  ) {
+    return loginCopy.emailTaken;
+  }
+  if (
+    haystack.includes("over_email_send_rate_limit") ||
+    haystack.includes("rate_limit") ||
+    error.status === 429
+  ) {
+    return loginCopy.rateLimitError;
+  }
+  if (error.status === 500 || haystack.includes("internal server error")) {
+    return loginCopy.recoverServerError;
+  }
+  if (
+    haystack.includes("weak_password") ||
+    (haystack.includes("password") &&
+      (haystack.includes("least") || haystack.includes("characters")))
+  ) {
+    return loginCopy.passwordTooShort;
+  }
+  // Fallback: keep product copy, but expose provider hint when useful.
+  if (error.message && error.message.length < 160) {
+    return `${loginCopy.sendError} (${error.message})`;
+  }
+  return loginCopy.sendError;
 }
 
 export function LoginForm({ nextPath }: LoginFormProps) {
+  const router = useRouter();
+  const [mode, setMode] = useState<AuthMode>("sign-in");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const isSignUp = mode === "sign-up";
+  const isReset = mode === "reset";
+
+  function switchMode(next: AuthMode) {
+    setMode(next);
+    setMessage(null);
+    setHasError(false);
+    setConfirmPassword("");
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage(null);
     setHasError(false);
 
+    const trimmedEmail = email.trim().toLowerCase();
+
+    if (isReset) {
+      startTransition(async () => {
+        try {
+          const supabase = createClient();
+          const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/auth/update-password")}`;
+          const { error } = await supabase.auth.resetPasswordForEmail(
+            trimmedEmail,
+            { redirectTo },
+          );
+
+          if (error) {
+            console.error("resetPasswordForEmail", {
+              code: error.code,
+              message: error.message,
+              status: error.status,
+            });
+            setHasError(true);
+            setMessage(authErrorMessage(error));
+            return;
+          }
+
+          setMessage(loginCopy.resetEmailSent);
+        } catch (error) {
+          setHasError(true);
+          if (error instanceof MissingEnvError) {
+            setMessage(loginCopy.envError);
+            return;
+          }
+          setMessage(loginCopy.sendError);
+        }
+      });
+      return;
+    }
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setHasError(true);
+      setMessage(loginCopy.passwordTooShort);
+      return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+      setHasError(true);
+      setMessage(loginCopy.passwordMismatch);
+      return;
+    }
+
     startTransition(async () => {
       try {
         const supabase = createClient();
-        const redirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
 
-        const { error } = await supabase.auth.signInWithOtp({
-          email: email.trim(),
-          options: {
-            emailRedirectTo: redirectTo,
-          },
-        });
+        if (isSignUp) {
+          const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+          const { data, error } = await supabase.auth.signUp({
+            email: trimmedEmail,
+            password,
+            options: { emailRedirectTo },
+          });
 
-        if (error) {
-          setHasError(true);
-          setMessage(
-            isRateLimited(error)
-              ? loginCopy.rateLimitError
-              : loginCopy.sendError,
-          );
-          return;
+          if (error) {
+            setHasError(true);
+            setMessage(authErrorMessage(error));
+            return;
+          }
+
+          if (!data.session) {
+            setHasError(false);
+            setMessage(loginCopy.signUpConfirmEmail);
+            return;
+          }
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email: trimmedEmail,
+            password,
+          });
+
+          if (error) {
+            console.error("signInWithPassword", {
+              code: error.code,
+              message: error.message,
+              status: error.status,
+            });
+            setHasError(true);
+            setMessage(authErrorMessage(error));
+            return;
+          }
         }
 
-        setMessage(loginCopy.sendOk);
+        router.push(nextPath);
+        router.refresh();
       } catch (error) {
         setHasError(true);
         if (error instanceof MissingEnvError) {
@@ -72,6 +200,52 @@ export function LoginForm({ nextPath }: LoginFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      {!isReset ? (
+        <div
+          className="flex rounded-[var(--radius-pill)] bg-sand-deep/80 p-1"
+          role="tablist"
+          aria-label={loginCopy.modeLabel}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={!isSignUp}
+            onClick={() => switchMode("sign-in")}
+            disabled={isPending}
+            className={`focus-ring flex-1 rounded-[var(--radius-pill)] px-3 py-2.5 text-sm font-semibold transition ${
+              !isSignUp
+                ? "bg-surface text-ink shadow-sm"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            {loginCopy.modeSignIn}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={isSignUp}
+            onClick={() => switchMode("sign-up")}
+            disabled={isPending}
+            className={`focus-ring flex-1 rounded-[var(--radius-pill)] px-3 py-2.5 text-sm font-semibold transition ${
+              isSignUp
+                ? "bg-surface text-ink shadow-sm"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            {loginCopy.modeSignUp}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-1 text-center">
+          <h2 className="text-lg font-semibold text-ink">
+            {loginCopy.resetTitle}
+          </h2>
+          <p className="text-sm leading-relaxed text-ink-soft">
+            {loginCopy.resetSupport}
+          </p>
+        </div>
+      )}
+
       <label className="flex flex-col gap-2 text-sm font-medium text-ink">
         {loginCopy.emailLabel}
         <span className="relative">
@@ -92,18 +266,96 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         </span>
       </label>
 
+      {!isReset ? (
+        <label className="flex flex-col gap-2 text-sm font-medium text-ink">
+          {loginCopy.passwordLabel}
+          <span className="relative">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
+              <IconLock size={18} />
+            </span>
+            <input
+              type="password"
+              name="password"
+              autoComplete={isSignUp ? "new-password" : "current-password"}
+              required
+              minLength={MIN_PASSWORD_LENGTH}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
+              placeholder={loginCopy.passwordPlaceholder}
+              disabled={isPending}
+            />
+          </span>
+        </label>
+      ) : null}
+
+      {isSignUp ? (
+        <label className="flex flex-col gap-2 text-sm font-medium text-ink">
+          {loginCopy.confirmPasswordLabel}
+          <span className="relative">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
+              <IconLock size={18} />
+            </span>
+            <input
+              type="password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              required
+              minLength={MIN_PASSWORD_LENGTH}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
+              placeholder={loginCopy.confirmPasswordPlaceholder}
+              disabled={isPending}
+            />
+          </span>
+        </label>
+      ) : null}
+
       <Button
         type="submit"
         disabled={isPending}
         className="min-h-14 gap-2 rounded-[var(--radius-pill)] shadow-[0_10px_28px_color-mix(in_srgb,var(--color-mint-deep)_35%,transparent)]"
       >
-        {isPending ? loginCopy.submitting : loginCopy.submit}
+        {isPending
+          ? isReset
+            ? loginCopy.resetSending
+            : isSignUp
+              ? loginCopy.submittingSignUp
+              : loginCopy.submitting
+          : isReset
+            ? loginCopy.resetCta
+            : isSignUp
+              ? loginCopy.submitSignUp
+              : loginCopy.submit}
         {!isPending ? <IconArrowRight size={18} /> : null}
       </Button>
 
-      <p className="text-center text-sm font-medium text-mint-deep">
-        {loginCopy.firstAccess}
-      </p>
+      {!isReset && !isSignUp ? (
+        <button
+          type="button"
+          onClick={() => switchMode("reset")}
+          disabled={isPending}
+          className="focus-ring text-center text-sm font-semibold text-mint-deep underline-offset-4 hover:underline"
+        >
+          {loginCopy.forgotPassword}
+        </button>
+      ) : null}
+
+      {isReset ? (
+        <button
+          type="button"
+          onClick={() => switchMode("sign-in")}
+          disabled={isPending}
+          className="focus-ring text-center text-sm font-semibold text-mint-deep underline-offset-4 hover:underline"
+        >
+          {loginCopy.backToSignIn}
+        </button>
+      ) : (
+        <p className="text-center text-sm font-medium text-mint-deep">
+          {isSignUp ? loginCopy.signUpHint : loginCopy.signInHint}
+        </p>
+      )}
 
       {message ? (
         <p

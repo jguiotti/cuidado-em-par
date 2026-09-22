@@ -62,7 +62,7 @@ Roadmap completo de sprints e ideias pós-MVP: `docs/roadmap-pos-mvp-e-sprints.m
 ## 3. Regras de negócio
 
 ### 3.1 Conta e consentimento
-1. Criar conta (e-mail mágico ou e-mail+senha). Isso gera linha em `auth.users` e um `user_profiles` vazio via trigger.
+1. Criar conta (e-mail + senha no MVP; magic link só como legado). Isso gera linha em `auth.users` e um `user_profiles` vazio via trigger.
 2. Antes de qualquer dado de saúde, registrar consentimentos em `lgpd_consent_logs`:
    - termos de uso e política de privacidade (obrigatório)
    - tratamento de dados de saúde para filtrar treino e refeição (obrigatório para o motor; sem isso o app só oferece hábitos genéricos de água/pausa, sem biblioteca personalizada)

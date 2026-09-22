@@ -2,10 +2,12 @@ export const circleCopy = {
   title: "Círculo",
   support: "Constância em companhia, sem comparar corpo.",
   privacy:
-    "Quem está no círculo vê se você registrou água, descanso, pausa, movimento ou refeição — sem detalhes de saúde.",
+    "Quem está no círculo vê se você registrou água, descanso, pausa, movimento, refeição ou “hoje não consigo”, e se enviou um carinho — sem detalhes de saúde.",
   emptyTitle: "Cuidar em companhia",
   emptySupport:
-    "Crie uma dupla ou um grupo, ou entre com um código. Vocês acompanham só o cuidado do dia.",
+    "Crie uma dupla ou um grupo, ou entre com um código. Juntas, o app acompanha a constância — sem comparar corpo.",
+  emptyValue:
+    "Vocês combinam quantos dias de cuidado querem na semana. Descanso também conta.",
   createPair: "Criar dupla",
   createGroup: "Criar grupo",
   createPairNameLabel: "Nome da dupla (opcional)",
@@ -32,12 +34,34 @@ export const circleCopy = {
     "Sair do círculo? O histórico compartilhado deixa de aparecer para você.",
   leaveCta: "Confirmar saída",
   cancel: "Cancelar",
+  progressTitle: "Cuidado em companhia",
+  progressSupport: (n: number, goal: number) =>
+    `${n} de ${goal} dias juntos nesta semana`,
+  progressMet: "Combinado da semana alcançado. O cuidado segue no ritmo de vocês.",
+  goalLegend: "Combinado da semana",
+  goalHint:
+    "Conta o dia quando a dupla (ou a metade do grupo) registra ao menos um cuidado — inclusive “hoje não consigo”.",
+  goalSave: "Salvar combinado",
+  goalSaved: "Combinado atualizado.",
+  goalOptions: {
+    3: "3 dias",
+    5: "5 dias",
+    7: "7 dias",
+  } as Record<number, string>,
+  togetherToday: "Dia em companhia hoje",
+  togetherOpen: "Ainda abrindo o dia em companhia",
+  nudgeSend: "Enviar carinho",
+  nudgeSent: "Carinho enviado",
+  nudgeReceived: (name: string) => `${name} enviou um carinho`,
+  nudgeAlready: "Você já enviou um carinho hoje para esta pessoa.",
+  restDayKind: "Descanso",
   kinds: {
     water: "Água",
     sleep: "Descanso",
     "active-pause": "Pausa",
     workout: "Movimento",
     meal: "Refeição",
+    "rest-day": "Hoje não consigo",
   },
   errors: {
     generic: "Não foi possível concluir agora. Tente de novo.",
@@ -46,6 +70,10 @@ export const circleCopy = {
     group_full: "Este grupo já está completo.",
     already_in_circle: "Você já está em um círculo.",
     load: "Não foi possível carregar o círculo agora.",
+    invalid_goal: "Escolha 3, 5 ou 7 dias.",
+    not_in_circle: "Você não está em um círculo agora.",
+    already_sent: "Carinho já enviado hoje para esta pessoa.",
+    not_mate: "Esta pessoa não está no seu círculo.",
   },
   you: "Você",
 } as const;

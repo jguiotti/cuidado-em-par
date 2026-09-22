@@ -4,7 +4,6 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 import {
   IconLeaf,
   IconLock,
-  IconMail,
   IconPair,
   IconPerson,
   IconShield,
@@ -54,7 +53,7 @@ export default function WelcomePage() {
           href="/login"
           className="focus-ring inline-flex min-h-14 items-center justify-center gap-2 rounded-[var(--radius-pill)] bg-mint-deep px-6 text-base font-semibold text-surface shadow-[0_10px_28px_color-mix(in_srgb,var(--color-mint-deep)_35%,transparent)] transition hover:opacity-90"
         >
-          <IconMail size={18} className="text-surface" />
+          <IconLock size={18} className="text-surface" />
           {welcomeCopy.primaryCta}
         </Link>
         <Link

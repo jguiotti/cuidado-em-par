@@ -2,8 +2,11 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import {
+  getCircleCareProgressAction,
   getMyCareCircleAction,
+  getRestDayTodayAction,
   listCareFeedAction,
+  listCareNudgesTodayAction,
 } from "@/app/actions/care-circle";
 import { getOrCreateTodayPlanAction } from "@/app/actions/daily-plan";
 import {
@@ -18,6 +21,7 @@ import { getCycleAccountSnapshotAction } from "@/app/actions/profile-health";
 import { CycleRemindersBanner } from "@/components/account/cycle-reminders-banner";
 import { ActivePauseCard } from "@/components/habits/active-pause-card";
 import { HabitRemindersOptIn } from "@/components/habits/habit-reminders-opt-in";
+import { RestDayCard } from "@/components/habits/rest-day-card";
 import { SleepCard } from "@/components/habits/sleep-card";
 import { WaterCard } from "@/components/habits/water-card";
 import { AppTopBar } from "@/components/layout/app-top-bar";
@@ -64,6 +68,9 @@ export default async function HomePage() {
     feedResult,
     cycleResult,
     clinicalResult,
+    circleProgressResult,
+    nudgesResult,
+    restDayResult,
   ] = await Promise.all([
     getTodayRitualAction(),
     listSafeActivePauseExercisesAction(),
@@ -78,6 +85,9 @@ export default async function HomePage() {
       .select("capability_tags")
       .eq("user_id", user.id)
       .maybeSingle(),
+    getCircleCareProgressAction(),
+    listCareNudgesTodayAction(),
+    getRestDayTodayAction(),
   ]);
 
   if (!ritualResult.ok) {
@@ -99,15 +109,41 @@ export default async function HomePage() {
   );
 
   let circleNote: string | null = null;
-  if (circleResult.ok && circleResult.data && feedResult.ok) {
-    const today = feedResult.data[0];
-    const mate = today?.entries.find(
-      (entry) => entry.userId !== user.id && entry.kinds.length > 0,
-    );
-    circleNote = mate
-      ? habitsCopy.home.circleMate(mate.displayName)
-      : habitsCopy.home.circleEmpty;
+  let circleProgressNote: string | null = null;
+  let circleNudgeNote: string | null = null;
+
+  if (circleResult.ok && circleResult.data) {
+    if (feedResult.ok) {
+      const today = feedResult.data[0];
+      const mate = today?.entries.find(
+        (entry) => entry.userId !== user.id && entry.kinds.length > 0,
+      );
+      circleNote = mate
+        ? habitsCopy.home.circleMate(mate.displayName)
+        : habitsCopy.home.circleEmpty;
+    }
+    if (circleProgressResult.ok && circleProgressResult.data) {
+      circleProgressNote = habitsCopy.home.circleProgress(
+        circleProgressResult.data.daysTogetherCount,
+        circleProgressResult.data.weeklyCareGoal,
+      );
+    }
+    if (nudgesResult.ok) {
+      const received = nudgesResult.data.find(
+        (nudge) => nudge.toUserId === user.id,
+      );
+      if (received) {
+        circleNudgeNote = habitsCopy.home.circleNudge(
+          received.fromDisplayName,
+        );
+      }
+    }
   }
+
+  const restDayMarked =
+    restDayResult.ok && restDayResult.data
+      ? restDayResult.data.marked
+      : false;
 
   return (
     <main className="flex flex-1 flex-col gap-6">
@@ -143,7 +179,7 @@ export default async function HomePage() {
         />
       ) : null}
 
-      {circleNote ? (
+      {circleNote || circleProgressNote ? (
         <div className="surface flex items-start gap-3 p-4">
           <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mint text-sm font-bold text-mint-deep">
             {circleResult.ok && circleResult.data
@@ -159,10 +195,32 @@ export default async function HomePage() {
             <p className="text-sm font-semibold text-mint-deep">
               {habitsCopy.home.circleEyebrow}
             </p>
-            <p className="text-sm leading-relaxed text-ink-soft">{circleNote}</p>
+            {circleProgressNote ? (
+              <p className="text-sm font-semibold text-ink">
+                {circleProgressNote}
+              </p>
+            ) : null}
+            {circleNote ? (
+              <p className="text-sm leading-relaxed text-ink-soft">
+                {circleNote}
+              </p>
+            ) : null}
+            {circleNudgeNote ? (
+              <p className="text-sm leading-relaxed text-ink-soft">
+                {circleNudgeNote}
+              </p>
+            ) : null}
+            <Link
+              href="/circle"
+              className="focus-ring inline-flex min-h-10 items-center text-sm font-semibold text-mint-deep"
+            >
+              {habitsCopy.home.circleOpen}
+            </Link>
           </div>
         </div>
       ) : null}
+
+      <RestDayCard initiallyMarked={restDayMarked} />
 
       <section className="space-y-3">
         <div className="flex items-end justify-between gap-3">

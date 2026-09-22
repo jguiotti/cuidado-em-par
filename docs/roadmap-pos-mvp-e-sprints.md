@@ -108,8 +108,8 @@ Migração futura: estender `habit_logs.kind` e `care_events.kind` com `sleep`; 
 
 ### Cuidado coletivo
 - Dupla como aquisição padrão antes de grupo grande.
-- Combinados do círculo (ex.: 3 dias de cuidado/semana) sem ranking.
-- Check-in de energia opcional (privado; não no feed clínico).
+- **Sprint 10 (planejado):** combinados do círculo (3/5/7 dias de cuidado/semana), progresso em companhia, toque de carinho e **“hoje não consigo”** (`rest-day`) — ver `docs/features/sprint-10-circle-care-together.md`.
+- Check-in de energia opcional além do `rest-day` (privado; não no feed clínico) — pós S10.
 
 ### Santuário / PWA
 - Onboarding de instalação com benefício claro.

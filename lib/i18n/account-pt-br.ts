@@ -12,6 +12,22 @@ export const accountCopy = {
     genderHint: "Só para respeito. Não altera treino nem refeição.",
     save: "Salvar perfil",
   },
+  password: {
+    title: "Senha de acesso",
+    support:
+      "Defina ou altere a senha desta conta. Também confirma o e-mail no provedor — necessário para contas que começaram só com link mágico.",
+    newLabel: "Nova senha",
+    confirmLabel: "Confirmar nova senha",
+    placeholder: "Mínimo de 8 caracteres",
+    submit: "Salvar senha",
+    submitting: "Salvando...",
+    saved: "Senha atualizada.",
+    tooShort: "A senha precisa ter pelo menos 8 caracteres.",
+    mismatch: "As senhas não coincidem. Digite de novo.",
+    updateError: "Não foi possível salvar a senha agora. Tente de novo.",
+    envError:
+      "Falta configurar o arquivo .env com a URL e a chave anon do Supabase.",
+  },
   motor: {
     title: "Como o cuidado é escolhido",
     support:

@@ -50,7 +50,7 @@ export const privacyCopy = {
       id: "categories",
       title: "4. Quais dados tratamos",
       paragraphs: [
-        "Conta e autenticação: endereço de e-mail; identificadores técnicos de sessão gerados pelo provedor de autenticação; data/hora de eventos de acesso necessários à segurança. O acesso preferencial é por link enviado ao e-mail (magic link), reduzindo armazenamento de senha no produto.",
+        "Conta e autenticação: endereço de e-mail; senha armazenada apenas como hash pelo provedor de autenticação (o produto não guarda senha em texto); identificadores técnicos de sessão; data/hora de eventos de acesso necessários à segurança.",
         "Perfil de apresentação: apelido ou nome de exibição; identidade de gênero opcional (texto livre de respeito, sem disparar motor clínico); progresso de onboarding.",
         "Dados de saúde e contexto (sensíveis), quando você consente e informa: foco de cuidado; condições e restrições clínicas (tags); capacidades de movimento; padrão alimentar e tags do que você evita; módulo opcional de ciclo menstrual e/ou gestação (fases/tags); peso opcional apenas para sugerir meta de hidratação.",
         "Hábitos e consistência: registros do dia (água, sono, pausa ativa, movimento e refeição marcados), preferências de lembrete local no aparelho, metas simples de hidratação/sono quando configuradas.",
@@ -64,7 +64,7 @@ export const privacyCopy = {
       id: "purposes",
       title: "5. Finalidades e bases legais",
       paragraphs: [
-        "Execução de cadastro e autenticação: criar e manter a conta, enviar link de acesso, proteger a sessão. Base: execução de contrato / procedimentos preliminares (art. 7º, V, LGPD) e legítimo interesse em segurança da conta, quando cabível, sem prejuízo do consentimento onde exigido.",
+        "Execução de cadastro e autenticação: criar e manter a conta com e-mail e senha, proteger a sessão. Base: execução de contrato / procedimentos preliminares (art. 7º, V, LGPD) e legítimo interesse em segurança da conta, quando cabível, sem prejuízo do consentimento onde exigido.",
         "Termos e esta Política: registro do aceite. Base: consentimento (art. 7º, I) e cumprimento de obrigação legal/regulatória de informação quando aplicável.",
         "Personalização de segurança do conteúdo (motor de tags): usar dados de saúde e alimentação para filtrar exercícios e refeições compatíveis e bloquear conteúdos contraindicados ou incompatíveis. Base para dados sensíveis: consentimento específico e destacado (art. 11, I, LGPD). Sem esse consentimento, o app não libera a biblioteca personalizada.",
         "Hábitos de consistência (água, sono, pausa): apoiar rotina preventiva com registros seus. Bases: execução do serviço contratado e, quando houver dado sensível associado, consentimento correspondente.",

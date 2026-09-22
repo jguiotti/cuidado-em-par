@@ -5,9 +5,14 @@ import { useState, useTransition } from "react";
 
 import {
   leaveCircleAction,
+  sendCareNudgeAction,
+  updateCircleWeeklyGoalAction,
   type CareCircleSnapshot,
   type CareFeedDay,
+  type CareNudgeRow,
 } from "@/app/actions/care-circle";
+import type { CircleCareProgress } from "@/lib/care/progress";
+import { WEEKLY_CARE_GOAL_VALUES } from "@/lib/care/week";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
 import { Surface } from "@/components/ui/surface";
@@ -17,6 +22,8 @@ import type { CareEventKind } from "@/lib/care/kinds";
 interface CircleActivePanelProps {
   circle: CareCircleSnapshot;
   feed: CareFeedDay[];
+  progress: CircleCareProgress | null;
+  nudges: CareNudgeRow[];
   currentUserId: string;
 }
 
@@ -39,12 +46,16 @@ function kindLabel(kind: CareEventKind): string {
 export function CircleActivePanel({
   circle,
   feed,
+  progress,
+  nudges,
   currentUserId,
 }: CircleActivePanelProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [goalMessage, setGoalMessage] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [goal, setGoal] = useState(circle.weeklyCareGoal);
   const [isPending, startTransition] = useTransition();
   const isWaiting = circle.members.length < 2;
   const canInviteMore = circle.members.length < circle.memberLimit;
@@ -53,12 +64,57 @@ export function CircleActivePanel({
   const kindLabelText =
     circle.kind === "group" ? circleCopy.kindGroup : circleCopy.kindPair;
 
+  const sentTo = new Set(
+    nudges
+      .filter((n) => n.fromUserId === currentUserId)
+      .map((n) => n.toUserId),
+  );
+  const receivedFrom = nudges.filter((n) => n.toUserId === currentUserId);
+
+  const todayProgress = progress?.dayStatuses.find(
+    (status) => status.day === (todayFeed?.day ?? ""),
+  );
+
   function handleCopy() {
     setCopyMessage(null);
     void navigator.clipboard.writeText(circle.inviteCode).then(
       () => setCopyMessage(circleCopy.copied),
       () => setError(circleCopy.errors.generic),
     );
+  }
+
+  function handleSaveGoal() {
+    setError(null);
+    setGoalMessage(null);
+    startTransition(async () => {
+      const result = await updateCircleWeeklyGoalAction({ goal });
+      if (!result.ok) {
+        setError(
+          result.code === "invalid_goal"
+            ? circleCopy.errors.invalid_goal
+            : circleCopy.errors.generic,
+        );
+        return;
+      }
+      setGoalMessage(circleCopy.goalSaved);
+      router.refresh();
+    });
+  }
+
+  function handleNudge(toUserId: string) {
+    setError(null);
+    startTransition(async () => {
+      const result = await sendCareNudgeAction({ toUserId });
+      if (!result.ok) {
+        if (result.code === "already_sent") {
+          setError(circleCopy.errors.already_sent);
+          return;
+        }
+        setError(circleCopy.errors.generic);
+        return;
+      }
+      router.refresh();
+    });
   }
 
   function handleLeave() {
@@ -76,6 +132,106 @@ export function CircleActivePanel({
 
   return (
     <div className="flex flex-col gap-6">
+      {progress ? (
+        <Surface className="space-y-4">
+          <div className="space-y-1">
+            <h2 className="text-xl font-semibold text-ink">
+              {circleCopy.progressTitle}
+            </h2>
+            <p className="text-base font-semibold text-mint-deep">
+              {circleCopy.progressSupport(
+                progress.daysTogetherCount,
+                progress.weeklyCareGoal,
+              )}
+            </p>
+            <div
+              className="h-3 overflow-hidden rounded-[var(--radius-pill)] bg-surface-raised"
+              role="progressbar"
+              aria-valuenow={progress.daysTogetherCount}
+              aria-valuemin={0}
+              aria-valuemax={progress.weeklyCareGoal}
+              aria-label={circleCopy.progressTitle}
+            >
+              <div
+                className="h-full rounded-[var(--radius-pill)] bg-mint-deep transition-[width]"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (progress.daysTogetherCount / progress.weeklyCareGoal) * 100,
+                  )}%`,
+                }}
+              />
+            </div>
+            {progress.daysTogetherCount >= progress.weeklyCareGoal ? (
+              <p className="text-sm leading-relaxed text-ink-soft">
+                {circleCopy.progressMet}
+              </p>
+            ) : null}
+            {todayProgress ? (
+              <p className="text-sm text-ink-soft">
+                {todayProgress.closedTogether
+                  ? circleCopy.togetherToday
+                  : circleCopy.togetherOpen}
+              </p>
+            ) : null}
+          </div>
+
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-semibold text-ink">
+              {circleCopy.goalLegend}
+            </legend>
+            <p className="text-sm leading-relaxed text-ink-soft">
+              {circleCopy.goalHint}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {WEEKLY_CARE_GOAL_VALUES.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setGoal(value)}
+                  className={`focus-ring min-h-11 rounded-[var(--radius-soft)] px-4 text-sm font-semibold ${
+                    goal === value
+                      ? "bg-mint text-ink"
+                      : "bg-surface-raised text-ink-soft"
+                  }`}
+                  aria-pressed={goal === value}
+                  disabled={isPending}
+                >
+                  {circleCopy.goalOptions[value]}
+                </button>
+              ))}
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleSaveGoal}
+              disabled={isPending || goal === circle.weeklyCareGoal}
+              className="w-full"
+            >
+              {circleCopy.goalSave}
+            </Button>
+            {goalMessage ? (
+              <p className="text-sm text-ink-soft" role="status">
+                {goalMessage}
+              </p>
+            ) : null}
+          </fieldset>
+        </Surface>
+      ) : null}
+
+      {receivedFrom.length > 0 ? (
+        <Surface className="space-y-2 bg-blush/40">
+          {receivedFrom.map((nudge) => (
+            <p
+              key={`${nudge.fromUserId}-${nudge.toUserId}`}
+              className="text-sm font-semibold text-ink"
+            >
+              {circleCopy.nudgeReceived(nudge.fromDisplayName)}
+            </p>
+          ))}
+        </Surface>
+      ) : null}
+
       <Surface className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-xl font-semibold text-ink">{circle.name}</h2>
@@ -123,16 +279,35 @@ export function CircleActivePanel({
       <Surface className="space-y-3">
         <h2 className="text-xl font-semibold text-ink">{circleCopy.members}</h2>
         <ul className="flex max-h-64 flex-col gap-2 overflow-y-auto">
-          {circle.members.map((member) => (
-            <li
-              key={member.userId}
-              className="rounded-[var(--radius-soft)] bg-surface-raised px-4 py-3 text-base text-ink"
-            >
-              {member.userId === currentUserId
-                ? `${member.displayName} (${circleCopy.you})`
-                : member.displayName}
-            </li>
-          ))}
+          {[...circle.members]
+            .sort((a, b) =>
+              a.displayName.localeCompare(b.displayName, "pt-BR"),
+            )
+            .map((member) => (
+              <li
+                key={member.userId}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[var(--radius-soft)] bg-surface-raised px-4 py-3"
+              >
+                <span className="text-base text-ink">
+                  {member.userId === currentUserId
+                    ? `${member.displayName} (${circleCopy.you})`
+                    : member.displayName}
+                </span>
+                {member.userId !== currentUserId ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="min-h-11 px-3 text-sm"
+                    disabled={isPending || sentTo.has(member.userId)}
+                    onClick={() => handleNudge(member.userId)}
+                  >
+                    {sentTo.has(member.userId)
+                      ? circleCopy.nudgeSent
+                      : circleCopy.nudgeSend}
+                  </Button>
+                ) : null}
+              </li>
+            ))}
         </ul>
       </Surface>
 
@@ -200,10 +375,10 @@ export function CircleActivePanel({
         {!confirmLeave ? (
           <Button
             type="button"
-            variant="secondary"
-            disabled={isPending}
-            onClick={() => setConfirmLeave(true)}
+            variant="ghost"
             className="w-full"
+            onClick={() => setConfirmLeave(true)}
+            disabled={isPending}
           >
             {circleCopy.leave}
           </Button>
@@ -215,17 +390,17 @@ export function CircleActivePanel({
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 type="button"
-                disabled={isPending}
                 onClick={handleLeave}
-                className="w-full bg-blush-deep text-ink hover:opacity-90"
+                disabled={isPending}
+                className="w-full"
               >
                 {circleCopy.leaveCta}
               </Button>
               <Button
                 type="button"
-                variant="ghost"
-                disabled={isPending}
+                variant="secondary"
                 onClick={() => setConfirmLeave(false)}
+                disabled={isPending}
                 className="w-full"
               >
                 {circleCopy.cancel}

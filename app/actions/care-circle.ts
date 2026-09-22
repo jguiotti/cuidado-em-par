@@ -12,7 +12,14 @@ import {
   isCareEventKind,
   type CareEventKind,
 } from "@/lib/care/kinds";
+import { buildCircleCareProgress } from "@/lib/care/progress";
 import { syncCareEventsForUserDay } from "@/lib/care/publish";
+import {
+  isWeeklyCareGoal,
+  startOfWeekMondaySaoPaulo,
+  endOfWeekSundaySaoPaulo,
+  type WeeklyCareGoal,
+} from "@/lib/care/week";
 import { todayInSaoPaulo } from "@/lib/habits/day";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,6 +40,7 @@ export interface CareCircleSnapshot {
   members: CareMember[];
   memberLimit: number;
   isCreator: boolean;
+  weeklyCareGoal: WeeklyCareGoal;
 }
 
 export interface CareFeedDay {
@@ -71,6 +79,12 @@ function mapRpcError(message: string): string {
   if (lower.includes("already_in_circle")) {
     return "already_in_circle";
   }
+  if (lower.includes("invalid_goal")) {
+    return "invalid_goal";
+  }
+  if (lower.includes("not_in_circle")) {
+    return "not_in_circle";
+  }
   if (lower.includes("unauthenticated")) {
     return "unauthenticated";
   }
@@ -102,7 +116,7 @@ export async function getMyCareCircleAction(): Promise<
 
   const { data: circle, error: circleError } = await supabase
     .from("care_circles")
-    .select("id, kind, name, invite_code, created_by")
+    .select("id, kind, name, invite_code, created_by, weekly_care_goal")
     .eq("id", membership.circle_id)
     .maybeSingle();
 
@@ -148,6 +162,11 @@ export async function getMyCareCircleAction(): Promise<
     displayName: nameById.get(userId) ?? "pessoa",
   }));
 
+  const weeklyRaw = Number(
+    (circle as { weekly_care_goal?: number | null }).weekly_care_goal ?? 3,
+  );
+  const weeklyCareGoal = isWeeklyCareGoal(weeklyRaw) ? weeklyRaw : 3;
+
   return {
     ok: true,
     data: {
@@ -158,6 +177,7 @@ export async function getMyCareCircleAction(): Promise<
       members,
       memberLimit: memberLimitForKind(circle.kind),
       isCreator: circle.created_by === user.id,
+      weeklyCareGoal,
     },
   };
 }
@@ -358,4 +378,270 @@ export async function listCareFeedAction(input?: {
   });
 
   return { ok: true, data: feed };
+}
+
+export async function getCircleCareProgressAction(): Promise<
+  CareActionResult<ReturnType<typeof buildCircleCareProgress> | null>
+> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const circleResult = await getMyCareCircleAction();
+  if (!circleResult.ok) {
+    return { ok: false, code: circleResult.code };
+  }
+  if (!circleResult.data) {
+    return { ok: true, data: null };
+  }
+
+  const circle = circleResult.data;
+  const anchor = todayInSaoPaulo();
+  const weekStart = startOfWeekMondaySaoPaulo(anchor);
+  const weekEnd = endOfWeekSundaySaoPaulo(anchor);
+
+  const { data: events, error } = await supabase
+    .from("care_events")
+    .select("user_id, day, kind")
+    .eq("circle_id", circle.circleId)
+    .gte("day", weekStart)
+    .lte("day", weekEnd);
+
+  if (error) {
+    console.error("getCircleCareProgressAction", error.message);
+    return { ok: false, code: "load_failed" };
+  }
+
+  const eventsByDayUser = new Map<string, Map<string, CareEventKind[]>>();
+  for (const event of events ?? []) {
+    if (!isCareEventKind(event.kind)) {
+      continue;
+    }
+    if (!eventsByDayUser.has(event.day)) {
+      eventsByDayUser.set(event.day, new Map());
+    }
+    const dayMap = eventsByDayUser.get(event.day)!;
+    const list = dayMap.get(event.user_id) ?? [];
+    if (!list.includes(event.kind)) {
+      list.push(event.kind);
+    }
+    dayMap.set(event.user_id, list);
+  }
+
+  // Normalize kind order
+  for (const dayMap of eventsByDayUser.values()) {
+    for (const [userId, kinds] of dayMap) {
+      dayMap.set(
+        userId,
+        CARE_EVENT_KINDS.filter((kind) => kinds.includes(kind)),
+      );
+    }
+  }
+
+  const progress = buildCircleCareProgress({
+    weeklyCareGoal: circle.weeklyCareGoal,
+    members: circle.members,
+    eventsByDayUser,
+    anchorDay: anchor,
+  });
+
+  return { ok: true, data: progress };
+}
+
+export async function updateCircleWeeklyGoalAction(input: {
+  goal: number;
+}): Promise<CareActionResult> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  if (!isWeeklyCareGoal(input.goal)) {
+    return { ok: false, code: "invalid_goal" };
+  }
+
+  const { error } = await supabase.rpc("set_circle_weekly_care_goal", {
+    p_goal: input.goal,
+  });
+
+  if (error) {
+    console.error("updateCircleWeeklyGoalAction", error.message);
+    return { ok: false, code: mapRpcError(error.message) };
+  }
+
+  revalidateCircle();
+  return { ok: true };
+}
+
+export async function markRestDayAction(): Promise<CareActionResult> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const day = todayInSaoPaulo();
+  const { error } = await supabase.from("habit_logs").upsert(
+    {
+      user_id: user.id,
+      day,
+      kind: "rest-day",
+      value: 1,
+      sleep_quality: null,
+      content_id: null,
+      content_key: "",
+    },
+    { onConflict: "user_id,day,kind,content_key" },
+  );
+
+  if (error) {
+    console.error("markRestDayAction", error.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  await syncCareEventsForUserDay(supabase, user.id, day);
+  revalidateCircle();
+  return { ok: true };
+}
+
+export async function unmarkRestDayAction(): Promise<CareActionResult> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const day = todayInSaoPaulo();
+  const { error } = await supabase
+    .from("habit_logs")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("day", day)
+    .eq("kind", "rest-day")
+    .eq("content_key", "");
+
+  if (error) {
+    console.error("unmarkRestDayAction", error.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  await syncCareEventsForUserDay(supabase, user.id, day);
+  revalidateCircle();
+  return { ok: true };
+}
+
+export async function getRestDayTodayAction(): Promise<
+  CareActionResult<{ marked: boolean }>
+> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const day = todayInSaoPaulo();
+  const { data, error } = await supabase
+    .from("habit_logs")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("day", day)
+    .eq("kind", "rest-day")
+    .eq("content_key", "")
+    .maybeSingle();
+
+  if (error) {
+    console.error("getRestDayTodayAction", error.message);
+    return { ok: false, code: "load_failed" };
+  }
+
+  return { ok: true, data: { marked: Boolean(data) } };
+}
+
+export interface CareNudgeRow {
+  fromUserId: string;
+  fromDisplayName: string;
+  toUserId: string;
+}
+
+export async function listCareNudgesTodayAction(): Promise<
+  CareActionResult<CareNudgeRow[]>
+> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const circleResult = await getMyCareCircleAction();
+  if (!circleResult.ok) {
+    return { ok: false, code: circleResult.code };
+  }
+  if (!circleResult.data) {
+    return { ok: true, data: [] };
+  }
+
+  const day = todayInSaoPaulo();
+  const { data, error } = await supabase
+    .from("care_nudges")
+    .select("from_user_id, to_user_id")
+    .eq("circle_id", circleResult.data.circleId)
+    .eq("day", day);
+
+  if (error) {
+    console.error("listCareNudgesTodayAction", error.message);
+    return { ok: false, code: "load_failed" };
+  }
+
+  const nameById = new Map(
+    circleResult.data.members.map((m) => [m.userId, m.displayName]),
+  );
+
+  return {
+    ok: true,
+    data: (data ?? []).map((row) => ({
+      fromUserId: row.from_user_id,
+      fromDisplayName: nameById.get(row.from_user_id) ?? "pessoa",
+      toUserId: row.to_user_id,
+    })),
+  };
+}
+
+export async function sendCareNudgeAction(input: {
+  toUserId: string;
+}): Promise<CareActionResult> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  const circleResult = await getMyCareCircleAction();
+  if (!circleResult.ok) {
+    return { ok: false, code: circleResult.code };
+  }
+  if (!circleResult.data) {
+    return { ok: false, code: "not_in_circle" };
+  }
+
+  const mate = circleResult.data.members.find(
+    (member) => member.userId === input.toUserId,
+  );
+  if (!mate || mate.userId === user.id) {
+    return { ok: false, code: "not_mate" };
+  }
+
+  const day = todayInSaoPaulo();
+  const { error } = await supabase.from("care_nudges").insert({
+    circle_id: circleResult.data.circleId,
+    from_user_id: user.id,
+    to_user_id: input.toUserId,
+    day,
+  });
+
+  if (error) {
+    if (/duplicate|unique/i.test(error.message)) {
+      return { ok: false, code: "already_sent" };
+    }
+    console.error("sendCareNudgeAction", error.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  revalidateCircle();
+  return { ok: true };
 }

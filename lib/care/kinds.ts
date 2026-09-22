@@ -4,6 +4,7 @@ export const CARE_EVENT_KINDS = [
   "active-pause",
   "workout",
   "meal",
+  "rest-day",
 ] as const;
 
 export type CareEventKind = (typeof CARE_EVENT_KINDS)[number];
@@ -30,6 +31,7 @@ export function deriveCareEventKinds(input: {
   let waterMl = 0;
   let hasSleep = false;
   let hasPause = false;
+  let hasRestDay = false;
   let workoutCount = 0;
   let mealCount = 0;
 
@@ -44,6 +46,8 @@ export function deriveCareEventKinds(input: {
       workoutCount += 1;
     } else if (log.kind === "meal") {
       mealCount += 1;
+    } else if (log.kind === "rest-day") {
+      hasRestDay = true;
     }
   }
 
@@ -61,6 +65,9 @@ export function deriveCareEventKinds(input: {
   }
   if (mealCount > 0) {
     kinds.add("meal");
+  }
+  if (hasRestDay) {
+    kinds.add("rest-day");
   }
 
   return CARE_EVENT_KINDS.filter((kind) => kinds.has(kind));

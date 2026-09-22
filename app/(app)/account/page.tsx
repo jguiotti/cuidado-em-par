@@ -15,6 +15,7 @@ import { ExportDataPanel } from "@/components/account/export-data-panel";
 import { HealthConditionsEditPanel } from "@/components/account/health-conditions-edit-panel";
 import { InstallPwaPanel } from "@/components/account/install-pwa-panel";
 import { NutritionEditPanel } from "@/components/account/nutrition-edit-panel";
+import { PasswordChangePanel } from "@/components/account/password-change-panel";
 import { PublicProfileForm } from "@/components/account/public-profile-form";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { HabitPrefsForm } from "@/components/habits/habit-prefs-form";
@@ -76,6 +77,8 @@ export default async function AccountPage() {
         displayName={data.profile.displayName}
         genderIdentity={data.profile.genderIdentity}
       />
+
+      <PasswordChangePanel />
 
       <Surface className="space-y-2">
         <h2 className="text-xl font-semibold text-ink">

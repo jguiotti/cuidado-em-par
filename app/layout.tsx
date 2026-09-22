@@ -20,13 +20,6 @@ export const metadata: Metadata = {
     title: "Cuidado em Par",
     statusBarStyle: "default",
   },
-  icons: {
-    icon: [
-      { url: "/brand/mark.png", sizes: "any", type: "image/png" },
-      { url: "/icons/icon.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
-  },
 };
 
 export const viewport: Viewport = {

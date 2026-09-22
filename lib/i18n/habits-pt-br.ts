@@ -30,11 +30,24 @@ export const habitsCopy = {
       "Quando alguém do círculo registrar o dia, aparece um sinal leve aqui.",
     circleMate: (name: string) =>
       `${name} já registrou cuidado hoje — sem detalhes de saúde.`,
+    circleProgress: (n: number, goal: number) =>
+      `${n} de ${goal} dias de cuidado em companhia nesta semana.`,
+    circleNudge: (name: string) => `${name} enviou um carinho hoje.`,
+    circleOpen: "Abrir círculo",
     openMove: "Começar prática",
     openEat: "Ver refeição",
     moveChip: "Movimento seguro",
     eatChip: "Nutrição acessível",
     lowCostChip: "Baixo custo",
+  },
+  restDay: {
+    title: "Hoje não consigo",
+    support:
+      "Registrar descanso conta como presença no círculo — sem detalhes de saúde e sem culpa.",
+    cta: "Registrar descanso hoje",
+    done: "Descanso registrado hoje",
+    undo: "Remover registro de descanso",
+    error: "Não foi possível atualizar agora. Tente de novo.",
   },
   water: {
     title: "Água de hoje",

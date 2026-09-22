@@ -41,6 +41,7 @@ export const HABIT_KIND_VALUES = [
   "meal",
   "sleep",
   "cardio",
+  "rest-day",
 ] as const;
 
 export const SEX_ASSIGNED_AT_BIRTH_VALUES = [

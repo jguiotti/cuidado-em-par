@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 
 import {
+  getCircleCareProgressAction,
   getMyCareCircleAction,
   listCareFeedAction,
+  listCareNudgesTodayAction,
 } from "@/app/actions/care-circle";
 import { CircleActivePanel } from "@/components/circle/circle-active-panel";
 import { CircleEmptyPanel } from "@/components/circle/circle-empty-panel";
@@ -36,10 +38,13 @@ export default async function CirclePage() {
     redirect(pathForOnboardingStep(step));
   }
 
-  const [circleResult, feedResult] = await Promise.all([
-    getMyCareCircleAction(),
-    listCareFeedAction({ days: 7 }),
-  ]);
+  const [circleResult, feedResult, progressResult, nudgesResult] =
+    await Promise.all([
+      getMyCareCircleAction(),
+      listCareFeedAction({ days: 7 }),
+      getCircleCareProgressAction(),
+      listCareNudgesTodayAction(),
+    ]);
 
   if (!circleResult.ok) {
     return (
@@ -64,6 +69,8 @@ export default async function CirclePage() {
         <CircleActivePanel
           circle={circleResult.data}
           feed={feedResult.ok ? feedResult.data : []}
+          progress={progressResult.ok ? progressResult.data : null}
+          nudges={nudgesResult.ok ? nudgesResult.data : []}
           currentUserId={user.id}
         />
       ) : (

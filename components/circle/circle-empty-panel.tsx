@@ -87,6 +87,9 @@ export function CircleEmptyPanel() {
           {circleCopy.emptySupport}
         </p>
         <p className="text-sm leading-relaxed text-ink-soft">
+          {circleCopy.emptyValue}
+        </p>
+        <p className="text-sm leading-relaxed text-ink-soft">
           {circleCopy.privacy}
         </p>
       </Surface>
