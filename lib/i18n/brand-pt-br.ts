@@ -48,8 +48,13 @@ export const loginCopy = {
   emailPlaceholder: "nome@exemplo.com",
   passwordLabel: "Senha",
   passwordPlaceholder: "Mínimo de 8 caracteres",
+  showPassword: "Mostrar senha",
+  hidePassword: "Ocultar senha",
   confirmPasswordLabel: "Confirmar senha",
   confirmPasswordPlaceholder: "Repita a senha",
+  emailRequired: "Informe um e-mail válido.",
+  networkError:
+    "Sem resposta do servidor. Confira a conexão e tente de novo.",
   submit: "Entrar no santuário",
   submitSignUp: "Criar meu espaço",
   submitting: "Entrando...",

@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { updateAccountPasswordAction } from "@/app/actions/account";
-import { IconLock } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
+import { PasswordField } from "@/components/ui/password-field";
 import { Surface } from "@/components/ui/surface";
 import { accountCopy } from "@/lib/i18n/account-pt-br";
 
@@ -18,10 +18,14 @@ export function PasswordChangePanel() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     setError(null);
     setMessage(null);
 
@@ -34,7 +38,8 @@ export function PasswordChangePanel() {
       return;
     }
 
-    startTransition(async () => {
+    setIsPending(true);
+    try {
       const result = await updateAccountPasswordAction({ password });
 
       if (!result.ok) {
@@ -50,7 +55,11 @@ export function PasswordChangePanel() {
       setConfirmPassword("");
       setMessage(accountCopy.password.saved);
       router.refresh();
-    });
+    } catch {
+      setError(accountCopy.password.updateError);
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -64,48 +73,34 @@ export function PasswordChangePanel() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-          {accountCopy.password.newLabel}
-          <span className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
-              <IconLock size={18} />
-            </span>
-            <input
-              type="password"
-              name="newPassword"
-              autoComplete="new-password"
-              required
-              minLength={MIN_PASSWORD_LENGTH}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
-              placeholder={accountCopy.password.placeholder}
-              disabled={isPending}
-            />
-          </span>
-        </label>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <PasswordField
+          label={accountCopy.password.newLabel}
+          name="newPassword"
+          autoComplete="new-password"
+          required
+          minLength={MIN_PASSWORD_LENGTH}
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder={accountCopy.password.placeholder}
+          disabled={isPending}
+          showLabel={accountCopy.password.showPassword}
+          hideLabel={accountCopy.password.hidePassword}
+        />
 
-        <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-          {accountCopy.password.confirmLabel}
-          <span className="relative">
-            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
-              <IconLock size={18} />
-            </span>
-            <input
-              type="password"
-              name="confirmNewPassword"
-              autoComplete="new-password"
-              required
-              minLength={MIN_PASSWORD_LENGTH}
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
-              placeholder={accountCopy.password.placeholder}
-              disabled={isPending}
-            />
-          </span>
-        </label>
+        <PasswordField
+          label={accountCopy.password.confirmLabel}
+          name="confirmNewPassword"
+          autoComplete="new-password"
+          required
+          minLength={MIN_PASSWORD_LENGTH}
+          value={confirmPassword}
+          onChange={(event) => setConfirmPassword(event.target.value)}
+          placeholder={accountCopy.password.placeholder}
+          disabled={isPending}
+          showLabel={accountCopy.password.showPassword}
+          hideLabel={accountCopy.password.hidePassword}
+        />
 
         <Button type="submit" disabled={isPending} className="min-h-12">
           {isPending

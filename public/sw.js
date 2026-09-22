@@ -2,7 +2,7 @@
  * Never cache health, habit, account, or Supabase payloads.
  * `/_next/static` uses network-first so soft navigations never keep stale CSS. */
 
-const SHELL_CACHE = "cep-shell-v2";
+const SHELL_CACHE = "cep-shell-v3";
 const PRECACHE_URLS = [
   "/manifest.webmanifest",
   "/icons/icon.svg",

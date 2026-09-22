@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
-import { IconArrowRight, IconLock } from "@/components/brand/soft-icons";
+import { IconArrowRight } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
+import { InlineAlert } from "@/components/ui/inline-alert";
+import { PasswordField } from "@/components/ui/password-field";
 import { MissingEnvError } from "@/lib/env";
 import { loginCopy } from "@/lib/i18n/brand-pt-br";
 import { createClient } from "@/lib/supabase/client";
@@ -17,10 +19,14 @@ export function UpdatePasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [hasError, setHasError] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     setMessage(null);
     setHasError(false);
 
@@ -35,83 +41,74 @@ export function UpdatePasswordForm() {
       return;
     }
 
-    startTransition(async () => {
-      try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+    setIsPending(true);
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-        if (!user) {
-          setHasError(true);
-          setMessage(loginCopy.resetSessionExpired);
-          return;
-        }
-
-        const { error } = await supabase.auth.updateUser({ password });
-        if (error) {
-          setHasError(true);
-          setMessage(loginCopy.sendError);
-          return;
-        }
-
-        setMessage(loginCopy.resetPasswordSaved);
-        router.push("/home");
-        router.refresh();
-      } catch (error) {
+      if (!user) {
         setHasError(true);
-        if (error instanceof MissingEnvError) {
-          setMessage(loginCopy.envError);
-          return;
-        }
-        setMessage(loginCopy.sendError);
+        setMessage(loginCopy.resetSessionExpired);
+        return;
       }
-    });
+
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) {
+        setHasError(true);
+        setMessage(loginCopy.sendError);
+        return;
+      }
+
+      setMessage(loginCopy.resetPasswordSaved);
+      router.push("/home");
+      router.refresh();
+    } catch (error) {
+      setHasError(true);
+      if (error instanceof MissingEnvError) {
+        setMessage(loginCopy.envError);
+        return;
+      }
+      setMessage(loginCopy.sendError);
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-      <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-        {loginCopy.resetNewPasswordLabel}
-        <span className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
-            <IconLock size={18} />
-          </span>
-          <input
-            type="password"
-            name="password"
-            autoComplete="new-password"
-            required
-            minLength={MIN_PASSWORD_LENGTH}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
-            placeholder={loginCopy.passwordPlaceholder}
-            disabled={isPending}
-          />
-        </span>
-      </label>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
+      {message ? (
+        <InlineAlert tone={hasError ? "error" : "info"}>{message}</InlineAlert>
+      ) : null}
 
-      <label className="flex flex-col gap-2 text-sm font-medium text-ink">
-        {loginCopy.confirmPasswordLabel}
-        <span className="relative">
-          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft">
-            <IconLock size={18} />
-          </span>
-          <input
-            type="password"
-            name="confirmPassword"
-            autoComplete="new-password"
-            required
-            minLength={MIN_PASSWORD_LENGTH}
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            className="field-control min-h-14 w-full py-3 pl-12 pr-4 text-base text-ink"
-            placeholder={loginCopy.confirmPasswordPlaceholder}
-            disabled={isPending}
-          />
-        </span>
-      </label>
+      <PasswordField
+        label={loginCopy.resetNewPasswordLabel}
+        name="password"
+        autoComplete="new-password"
+        required
+        minLength={MIN_PASSWORD_LENGTH}
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        placeholder={loginCopy.passwordPlaceholder}
+        disabled={isPending}
+        showLabel={loginCopy.showPassword}
+        hideLabel={loginCopy.hidePassword}
+      />
+
+      <PasswordField
+        label={loginCopy.confirmPasswordLabel}
+        name="confirmPassword"
+        autoComplete="new-password"
+        required
+        minLength={MIN_PASSWORD_LENGTH}
+        value={confirmPassword}
+        onChange={(event) => setConfirmPassword(event.target.value)}
+        placeholder={loginCopy.confirmPasswordPlaceholder}
+        disabled={isPending}
+        showLabel={loginCopy.showPassword}
+        hideLabel={loginCopy.hidePassword}
+      />
 
       <Button
         type="submit"
@@ -121,15 +118,6 @@ export function UpdatePasswordForm() {
         {isPending ? loginCopy.resetSubmitting : loginCopy.resetSubmit}
         {!isPending ? <IconArrowRight size={18} /> : null}
       </Button>
-
-      {message ? (
-        <p
-          className="text-sm leading-relaxed text-ink-soft"
-          role={hasError ? "alert" : "status"}
-        >
-          {message}
-        </p>
-      ) : null}
     </form>
   );
 }

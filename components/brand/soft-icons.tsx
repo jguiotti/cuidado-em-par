@@ -5,6 +5,8 @@ import {
   Clock,
   Droplets,
   Dumbbell,
+  Eye,
+  EyeOff,
   Home,
   Leaf,
   Lock,
@@ -56,6 +58,14 @@ export function IconArrowRight(props: AppIconProps) {
 
 export function IconLock(props: AppIconProps) {
   return <Lock {...withDefaults(props)} />;
+}
+
+export function IconEye(props: AppIconProps) {
+  return <Eye {...withDefaults(props)} />;
+}
+
+export function IconEyeOff(props: AppIconProps) {
+  return <EyeOff {...withDefaults(props)} />;
 }
 
 export function IconHome(props: AppIconProps) {

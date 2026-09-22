@@ -28,6 +28,8 @@ export const accountCopy = {
     newLabel: "Nova senha",
     confirmLabel: "Confirmar nova senha",
     placeholder: "Mínimo de 8 caracteres",
+    showPassword: "Mostrar senha",
+    hidePassword: "Ocultar senha",
     submit: "Salvar senha",
     submitting: "Salvando...",
     saved: "Senha atualizada.",
