@@ -9,6 +9,7 @@ import {
   normalizeClinicalConditionSlug,
   type ClinicalConditionDef,
 } from "@/lib/clinical/conditions-catalog";
+import { isExerciseCompatibleWithEquipment } from "@/lib/onboarding/equipment";
 
 /** Minimal exercise shape used by enrichment and offline safety checks. */
 export interface ExerciseSafetyShape {
@@ -17,6 +18,7 @@ export interface ExerciseSafetyShape {
   intensityTags: string[];
   contraindicationTags: string[];
   requiredCapabilityTags: string[];
+  equipmentTags?: string[];
   isPublished: boolean;
 }
 
@@ -24,6 +26,7 @@ export interface ProfileSafetyInput {
   conditionTags: string[];
   capabilityTags: string[];
   phaseTags?: string[];
+  availableEquipmentTags?: string[];
 }
 
 export interface BlockRule {
@@ -191,6 +194,15 @@ export function isExerciseSafeForProfile(
     if (intensityBlockedByRules(intensity, profileTags)) {
       return false;
     }
+  }
+
+  if (
+    !isExerciseCompatibleWithEquipment(
+      exercise.equipmentTags ?? [],
+      profile.availableEquipmentTags,
+    )
+  ) {
+    return false;
   }
 
   return true;

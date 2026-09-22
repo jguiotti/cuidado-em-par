@@ -10,6 +10,11 @@ import {
 } from "@/lib/admin/meal-tags";
 import { syncCareEventsForUserDay } from "@/lib/care/publish";
 import { todayInSaoPaulo } from "@/lib/habits/day";
+import { mealBlockedByDislikedFoods } from "@/lib/nutrition/disliked-foods";
+import {
+  ALWAYS_AVAILABLE_EQUIPMENT_SLUG,
+  isExerciseCompatibleWithEquipment,
+} from "@/lib/onboarding/equipment";
 import { MEAL_SLOT_VALUES, type MealSlot } from "@/lib/tags/constants";
 import { createClient } from "@/lib/supabase/server";
 
@@ -60,35 +65,48 @@ export async function listSafeExercisesForMeAction(): Promise<
     return { ok: false, code: "load_failed" };
   }
 
-  const items: SafeExerciseCard[] = (data ?? []).map(
-    (row: {
-      id: string;
-      title: string;
-      description: string;
-      equipment_tags: string[] | null;
-      target_muscles: string[] | null;
-      intensity_tags: string[] | null;
-      estimated_duration_minutes: number | null;
-      image_paths: string[] | null;
-    }) => {
-      const paths = row.image_paths ?? [];
-      const imageSrc =
-        paths
-          .map((path) => resolveExerciseImageSrc(path))
-          .find((src): src is string => Boolean(src)) ?? null;
+  const { data: clinical } = await supabase
+    .from("user_clinical_conditions")
+    .select("available_equipment_tags")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-      return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        equipmentTags: row.equipment_tags ?? [],
-        targetMuscles: row.target_muscles ?? [],
-        intensityTags: row.intensity_tags ?? [],
-        estimatedDurationMinutes: row.estimated_duration_minutes ?? 5,
-        imageSrc,
-      };
-    },
-  );
+  const availableEquipment =
+    clinical?.available_equipment_tags ?? [ALWAYS_AVAILABLE_EQUIPMENT_SLUG];
+
+  const items: SafeExerciseCard[] = (data ?? [])
+    .map(
+      (row: {
+        id: string;
+        title: string;
+        description: string;
+        equipment_tags: string[] | null;
+        target_muscles: string[] | null;
+        intensity_tags: string[] | null;
+        estimated_duration_minutes: number | null;
+        image_paths: string[] | null;
+      }) => {
+        const paths = row.image_paths ?? [];
+        const imageSrc =
+          paths
+            .map((path) => resolveExerciseImageSrc(path))
+            .find((src): src is string => Boolean(src)) ?? null;
+
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          equipmentTags: row.equipment_tags ?? [],
+          targetMuscles: row.target_muscles ?? [],
+          intensityTags: row.intensity_tags ?? [],
+          estimatedDurationMinutes: row.estimated_duration_minutes ?? 5,
+          imageSrc,
+        };
+      },
+    )
+    .filter((item: SafeExerciseCard) =>
+      isExerciseCompatibleWithEquipment(item.equipmentTags, availableEquipment),
+    );
 
   return { ok: true, items };
 }
@@ -111,33 +129,46 @@ export async function listSafeMealsForMeAction(
     return { ok: false, code: "load_failed" };
   }
 
-  let items: SafeMealCard[] = (data ?? []).map(
-    (row: {
-      id: string;
-      title: string;
-      description: string;
-      meal_slot: string;
-      ingredients: unknown;
-      diet_compatible_tags: string[] | null;
-      image_paths: string[] | null;
-    }) => {
-      const paths = row.image_paths ?? [];
-      const imageSrc =
-        paths
-          .map((path) => resolveMealImageSrc(path))
-          .find((src): src is string => Boolean(src)) ?? null;
+  const { data: nutrition } = await supabase
+    .from("user_nutrition_profiles")
+    .select("disliked_foods")
+    .eq("user_id", user.id)
+    .maybeSingle();
 
-      return {
-        id: row.id,
-        title: row.title,
-        description: row.description,
-        mealSlot: row.meal_slot as MealSlot,
-        ingredients: parseMealIngredients(row.ingredients),
-        dietCompatibleTags: row.diet_compatible_tags ?? [],
-        imageSrc,
-      };
-    },
-  );
+  const dislikedFoods = nutrition?.disliked_foods ?? [];
+
+  let items: SafeMealCard[] = (data ?? [])
+    .map(
+      (row: {
+        id: string;
+        title: string;
+        description: string;
+        meal_slot: string;
+        ingredients: unknown;
+        diet_compatible_tags: string[] | null;
+        image_paths: string[] | null;
+      }) => {
+        const paths = row.image_paths ?? [];
+        const imageSrc =
+          paths
+            .map((path) => resolveMealImageSrc(path))
+            .find((src): src is string => Boolean(src)) ?? null;
+
+        return {
+          id: row.id,
+          title: row.title,
+          description: row.description,
+          mealSlot: row.meal_slot as MealSlot,
+          ingredients: parseMealIngredients(row.ingredients),
+          dietCompatibleTags: row.diet_compatible_tags ?? [],
+          imageSrc,
+        };
+      },
+    )
+    .filter(
+      (meal: SafeMealCard) =>
+        !mealBlockedByDislikedFoods(meal.ingredients, dislikedFoods),
+    );
 
   if (slot && slot !== "all" && MEAL_SLOT_VALUES.includes(slot)) {
     items = items.filter((meal) => meal.mealSlot === slot);

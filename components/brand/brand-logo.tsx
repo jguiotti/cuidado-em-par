@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import { BrandMark } from "@/components/brand/brand-mark";
@@ -12,11 +13,10 @@ interface BrandLogoProps {
   className?: string;
 }
 
-const MARK_SIZES: Record<BrandLogoVariant, number> = {
+const MARK_SIZES: Record<"mark" | "hero" | "stacked", number> = {
   mark: 36,
-  header: 40,
-  hero: 52,
-  stacked: 48,
+  hero: 56,
+  stacked: 72,
 };
 
 export function BrandLogo({
@@ -24,46 +24,50 @@ export function BrandLogo({
   href = "/",
   className = "",
 }: BrandLogoProps) {
-  const size = MARK_SIZES[variant];
-
   const content =
-    variant === "stacked" ? (
+    variant === "header" ? (
+      <span className={`inline-flex items-center ${className}`.trim()}>
+        <Image
+          src="/brand/logo-horizontal.png"
+          alt={brandCopy.name}
+          width={220}
+          height={56}
+          className="h-10 w-auto max-w-[min(100%,14rem)] object-contain object-left sm:h-11"
+          priority
+        />
+      </span>
+    ) : variant === "stacked" ? (
       <span
-        className={`inline-flex flex-col items-center gap-3 ${className}`.trim()}
+        className={`inline-flex flex-col items-center gap-2 ${className}`.trim()}
       >
-        <span className="inline-flex items-center gap-3 rounded-[var(--radius-pill)] bg-surface px-5 py-3 shadow-[0_12px_36px_color-mix(in_srgb,var(--color-ink)_8%,transparent)]">
-          <BrandMark size={size} />
-          <span className="text-lg font-bold tracking-tight text-ink">
-            {brandCopy.name}
-          </span>
-        </span>
-        <span className="text-sm font-medium text-mint-deep">
-          {brandCopy.lockupEyebrow}
+        <Image
+          src="/brand/logo-vertical.png"
+          alt={brandCopy.name}
+          width={160}
+          height={200}
+          className="h-auto w-36 object-contain sm:w-40"
+          priority
+        />
+      </span>
+    ) : variant === "hero" ? (
+      <span
+        className={`inline-flex flex-col items-start gap-3 ${className}`.trim()}
+      >
+        <Image
+          src="/brand/logo-horizontal.png"
+          alt={brandCopy.name}
+          width={280}
+          height={72}
+          className="h-12 w-auto max-w-full object-contain object-left sm:h-14"
+          priority
+        />
+        <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+          {brandCopy.tagline}
         </span>
       </span>
     ) : (
-      <span className={`inline-flex items-center gap-3 ${className}`.trim()}>
-        <span className="inline-flex overflow-hidden rounded-full bg-surface shadow-[0_8px_24px_color-mix(in_srgb,var(--color-ink)_8%,transparent)]">
-          <BrandMark size={size} />
-        </span>
-        {variant !== "mark" ? (
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span
-              className={
-                variant === "hero"
-                  ? "text-xl font-bold tracking-tight text-ink sm:text-2xl"
-                  : "text-base font-bold tracking-tight text-ink"
-              }
-            >
-              {brandCopy.name}
-            </span>
-            {variant === "hero" ? (
-              <span className="mt-1 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-                {brandCopy.tagline}
-              </span>
-            ) : null}
-          </span>
-        ) : null}
+      <span className={`inline-flex items-center ${className}`.trim()}>
+        <BrandMark size={MARK_SIZES.mark} />
       </span>
     );
 

@@ -107,6 +107,29 @@ export const onboardingCopy = {
     cta: "Continuar",
     error: "Escolha uma opção de mobilidade.",
   },
+  equipment: {
+    title: "O que você tem em casa?",
+    support:
+      "Peso corporal já conta. Busque e adicione os itens que você usa nos movimentos — cadeira, elástico, garrafa, toalha e o que mais fizer sentido. Só sugerimos exercícios compatíveis com o que você marcar.",
+    legend: "Itens disponíveis",
+    searchLabel: "Buscar e adicionar item",
+    searchPlaceholder: "Ex.: elástico, cadeira, garrafa, toalha…",
+    searchHint:
+      "Toque em um resultado para adicionar. Pode repetir a busca e incluir vários.",
+    searchIdle: "Todos os itens já foram adicionados, ou busque outro termo.",
+    noResults: "Nada encontrado com esse termo. Tente “cadeira” ou “elástico”.",
+    selectedLabel: (count: number) =>
+      count === 1 ? "1 item adicionado" : `${count} itens adicionados`,
+    addMoreHint: "Pode buscar de novo e adicionar outros.",
+    add: "Adicionar",
+    remove: "Remover",
+    none: "Só peso corporal",
+    noneConfirmed:
+      "Você marcou só peso corporal. Seguimos com movimentos sem equipamento extra.",
+    needChoice:
+      "Adicione ao menos um item ou toque em “Só peso corporal”.",
+    cta: "Continuar",
+  },
   nutrition: {
     title: "Alimentação",
     support:
@@ -134,6 +157,20 @@ export const onboardingCopy = {
     noneConfirmed: "Você marcou que não tem restrições alimentares extras.",
     needChoice:
       "Adicione ao menos uma restrição ou toque em “Nenhuma restrição”.",
+    dislikesLegend: "Alimentos que você prefere evitar",
+    dislikesHint:
+      "Ex.: pepino, mel. Receitas com esse ingrediente só aparecem se houver substituição sugerida.",
+    dislikesLabel: "Adicionar alimento que não gosta",
+    dislikesPlaceholder: "Ex.: pepino, mel, cebola…",
+    dislikesAdd: "Adicionar",
+    dislikesNone: "Nenhum alimento específico",
+    dislikesNoneConfirmed:
+      "Você marcou que não tem preferências de sabor a evitar.",
+    dislikesSelected: (count: number) =>
+      count === 1
+        ? "1 alimento marcado"
+        : `${count} alimentos marcados`,
+    dislikesInvalid: "Digite um alimento com pelo menos 2 letras.",
     cta: "Continuar",
     patterns: {
       "no-restriction": "Sem padrão específico",

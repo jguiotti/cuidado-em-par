@@ -48,7 +48,7 @@ export function MobilityStep() {
         return;
       }
 
-      router.push("/onboarding/nutrition");
+      router.push("/onboarding/equipment");
       router.refresh();
     });
   }

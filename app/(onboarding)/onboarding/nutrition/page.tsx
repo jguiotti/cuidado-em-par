@@ -27,7 +27,7 @@ export default async function NutritionPage() {
 
   const { data: nutrition } = await supabase
     .from("user_nutrition_profiles")
-    .select("diet_pattern, avoids_tags")
+    .select("diet_pattern, avoids_tags, disliked_foods")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -38,6 +38,7 @@ export default async function NutritionPage() {
         "no-restriction"
       }
       initialAvoids={nutrition?.avoids_tags ?? []}
+      initialDislikes={nutrition?.disliked_foods ?? []}
     />
   );
 }

@@ -7,6 +7,7 @@ import {
   mergeConditionTags,
   suggestWaterGoalMl,
 } from "@/lib/onboarding/capabilities";
+import { buildAvailableEquipmentTags } from "@/lib/onboarding/equipment";
 import { filterClinicalConditionSlugs } from "@/lib/clinical/conditions-catalog";
 import {
   isHealthFocus,
@@ -18,6 +19,7 @@ import {
   type SexAssignedAtBirth,
 } from "@/lib/onboarding/progress";
 import { createClient } from "@/lib/supabase/server";
+import { filterDislikedFoods } from "@/lib/nutrition/disliked-foods";
 import { filterFoodAvoidSlugs } from "@/lib/nutrition/food-conditions-catalog";
 import {
   CYCLE_MODE_VALUES,
@@ -378,6 +380,51 @@ export async function updateMobilityAction(input: {
     return { ok: false, code: "save_failed" };
   }
 
+  await setOnboardingStage(userId, "equipment");
+  revalidateOnboarding();
+  return { ok: true };
+}
+
+export async function updateEquipmentAction(input: {
+  extraEquipmentTags: string[];
+  noneSelected?: boolean;
+}): Promise<ActionResult> {
+  const { supabase, userId } = await requireUserId();
+  if (!userId) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  if (!(await requireHealthConsent(userId))) {
+    return { ok: false, code: "consent_required" };
+  }
+
+  const availableEquipmentTags = buildAvailableEquipmentTags(
+    input.noneSelected ? [] : input.extraEquipmentTags,
+  );
+
+  const { data: existing } = await supabase
+    .from("user_clinical_conditions")
+    .select(
+      "sex_assigned_at_birth, condition_tags, capability_tags",
+    )
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const { error } = await supabase.from("user_clinical_conditions").upsert(
+    {
+      user_id: userId,
+      sex_assigned_at_birth: existing?.sex_assigned_at_birth ?? null,
+      condition_tags: existing?.condition_tags ?? [],
+      capability_tags: existing?.capability_tags ?? [],
+      available_equipment_tags: availableEquipmentTags,
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) {
+    return { ok: false, code: "save_failed" };
+  }
+
   await setOnboardingStage(userId, "nutrition");
   revalidateOnboarding();
   return { ok: true };
@@ -386,6 +433,8 @@ export async function updateMobilityAction(input: {
 export async function updateNutritionAction(input: {
   dietPattern: string;
   avoidsTags: string[];
+  dislikedFoods?: string[];
+  noneDislikes?: boolean;
 }): Promise<ActionResult> {
   const { supabase, userId } = await requireUserId();
   if (!userId) {
@@ -416,11 +465,16 @@ export async function updateNutritionAction(input: {
     input.avoidsTags.filter((tag) => allowedAvoids.has(tag)),
   );
 
+  const dislikedFoods = input.noneDislikes
+    ? []
+    : filterDislikedFoods(input.dislikedFoods ?? []);
+
   const { error } = await supabase.from("user_nutrition_profiles").upsert(
     {
       user_id: userId,
       diet_pattern: input.dietPattern as DietPattern,
       avoids_tags: avoidsTags,
+      disliked_foods: dislikedFoods,
     },
     { onConflict: "user_id" },
   );

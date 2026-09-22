@@ -1,7 +1,7 @@
 import type { HealthFocus } from "@/lib/tags/constants";
 import { HEALTH_FOCUS_VALUES } from "@/lib/tags/constants";
 
-export const ONBOARDING_TOTAL_STEPS = 8;
+export const ONBOARDING_TOTAL_STEPS = 9;
 
 export const SEX_ASSIGNED_VALUES = [
   "female",
@@ -24,6 +24,7 @@ export const ONBOARDING_STAGES = [
   "sex_assigned",
   "clinical",
   "mobility",
+  "equipment",
   "nutrition",
   "cycle",
   "habits",
@@ -101,6 +102,8 @@ export function pathForOnboardingStep(step: OnboardingStep): string {
       return "/onboarding/clinical";
     case "mobility":
       return "/onboarding/mobility";
+    case "equipment":
+      return "/onboarding/equipment";
     case "nutrition":
       return "/onboarding/nutrition";
     case "cycle":
@@ -126,14 +129,16 @@ export function stepNumberForOnboarding(step: OnboardingStep): number {
       return 5;
     case "mobility":
       return 6;
+    case "equipment":
+      return 7;
     case "nutrition":
-      return 7;
+      return 8;
     case "cycle":
-      return 7;
+      return 8;
     case "habits":
-      return 8;
+      return 9;
     case "completed":
-      return 8;
+      return 9;
   }
 }
 

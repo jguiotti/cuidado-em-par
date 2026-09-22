@@ -20,6 +20,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { ProgressSteps } from "@/components/ui/progress-steps";
 import { TextField } from "@/components/ui/text-field";
 import { onboardingCopy } from "@/lib/i18n/onboarding-pt-br";
+import { normalizeDislikedFood } from "@/lib/nutrition/disliked-foods";
 import {
   getFoodAvoidCondition,
   searchFoodAvoidConditions,
@@ -33,6 +34,7 @@ import {
 interface NutritionStepProps {
   initialDietPattern?: DietPattern;
   initialAvoids?: string[];
+  initialDislikes?: string[];
 }
 
 const MIN_QUERY_LENGTH = 1;
@@ -40,15 +42,22 @@ const MIN_QUERY_LENGTH = 1;
 export function NutritionStep({
   initialDietPattern = "no-restriction",
   initialAvoids = [],
+  initialDislikes = [],
 }: NutritionStepProps) {
   const router = useRouter();
   const listId = "nutrition-search-results";
   const searchRef = useRef<HTMLInputElement>(null);
+  const dislikeRef = useRef<HTMLInputElement>(null);
   const [dietPattern, setDietPattern] =
     useState<DietPattern>(initialDietPattern);
   const [avoids, setAvoids] = useState<string[]>(initialAvoids);
   const [query, setQuery] = useState("");
   const [hasChosenNoAvoids, setHasChosenNoAvoids] = useState(false);
+  const [dislikes, setDislikes] = useState<string[]>(initialDislikes);
+  const [dislikeDraft, setDislikeDraft] = useState("");
+  const [hasChosenNoDislikes, setHasChosenNoDislikes] = useState(
+    initialDislikes.length === 0,
+  );
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -71,7 +80,9 @@ export function NutritionStep({
   );
 
   const showResults = query.trim().length >= MIN_QUERY_LENGTH;
-  const canContinue = hasChosenNoAvoids || avoids.length > 0;
+  const canContinue =
+    (hasChosenNoAvoids || avoids.length > 0) &&
+    (hasChosenNoDislikes || dislikes.length > 0);
 
   function addAvoid(slug: string) {
     setHasChosenNoAvoids(false);
@@ -92,10 +103,42 @@ export function NutritionStep({
     setQuery("");
   }
 
+  function addDislike() {
+    const normalized = normalizeDislikedFood(dislikeDraft);
+    if (!normalized) {
+      setError(onboardingCopy.nutrition.dislikesInvalid);
+      return;
+    }
+    setError(null);
+    setHasChosenNoDislikes(false);
+    setDislikes((current) =>
+      current.includes(normalized) ? current : [...current, normalized],
+    );
+    setDislikeDraft("");
+    dislikeRef.current?.focus();
+  }
+
+  function removeDislike(token: string) {
+    setDislikes((current) => current.filter((item) => item !== token));
+  }
+
+  function chooseNoDislikes() {
+    setHasChosenNoDislikes(true);
+    setDislikes([]);
+    setDislikeDraft("");
+  }
+
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && searchResults[0]) {
       event.preventDefault();
       addAvoid(searchResults[0].slug);
+    }
+  }
+
+  function handleDislikeKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addDislike();
     }
   }
 
@@ -112,6 +155,8 @@ export function NutritionStep({
       const result = await updateNutritionAction({
         dietPattern,
         avoidsTags: hasChosenNoAvoids ? [] : avoids,
+        dislikedFoods: hasChosenNoDislikes ? [] : dislikes,
+        noneDislikes: hasChosenNoDislikes,
       });
 
       if (!result.ok) {
@@ -135,9 +180,9 @@ export function NutritionStep({
   return (
     <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
       <ProgressSteps
-        current={7}
+        current={8}
         total={ONBOARDING_TOTAL_STEPS}
-        label={onboardingCopy.progressLabel(7, ONBOARDING_TOTAL_STEPS)}
+        label={onboardingCopy.progressLabel(8, ONBOARDING_TOTAL_STEPS)}
       />
 
       <div className="space-y-3">
@@ -277,6 +322,87 @@ export function NutritionStep({
         disabled={isPending}
       >
         {onboardingCopy.nutrition.none}
+      </button>
+
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-ink">
+          {onboardingCopy.nutrition.dislikesLegend}
+        </p>
+        <p className="text-sm leading-relaxed text-ink-soft">
+          {onboardingCopy.nutrition.dislikesHint}
+        </p>
+      </div>
+
+      {dislikes.length > 0 ? (
+        <div className="space-y-3">
+          <p className="text-sm font-medium text-ink">
+            {onboardingCopy.nutrition.dislikesSelected(dislikes.length)}
+          </p>
+          <ul className="flex flex-col gap-2">
+            {dislikes.map((token) => (
+              <li key={token}>
+                <button
+                  type="button"
+                  onClick={() => removeDislike(token)}
+                  className="focus-ring flex w-full items-center justify-between gap-3 rounded-[var(--radius-soft)] bg-mint px-4 py-3 text-left"
+                  disabled={isPending}
+                >
+                  <span className="text-base font-semibold text-ink">
+                    {token}
+                  </span>
+                  <span className="shrink-0 text-sm font-medium text-ink">
+                    {onboardingCopy.nutrition.remove}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {hasChosenNoDislikes && dislikes.length === 0 ? (
+        <div className="rounded-[var(--radius-soft)] bg-mint px-4 py-3 text-base font-semibold text-ink">
+          {onboardingCopy.nutrition.dislikesNoneConfirmed}
+        </div>
+      ) : null}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <div className="flex-1">
+          <TextField
+            ref={dislikeRef}
+            label={onboardingCopy.nutrition.dislikesLabel}
+            name="dislikeFood"
+            value={dislikeDraft}
+            onChange={(event) => setDislikeDraft(event.target.value)}
+            onKeyDown={handleDislikeKeyDown}
+            placeholder={onboardingCopy.nutrition.dislikesPlaceholder}
+            disabled={isPending}
+            autoComplete="off"
+          />
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={addDislike}
+          disabled={isPending}
+          className="w-full sm:w-auto"
+        >
+          {onboardingCopy.nutrition.dislikesAdd}
+        </Button>
+      </div>
+
+      <button
+        type="button"
+        onClick={chooseNoDislikes}
+        className={`focus-ring rounded-[var(--radius-soft)] p-4 text-left text-base font-semibold transition ${
+          hasChosenNoDislikes && dislikes.length === 0
+            ? "bg-mint text-ink shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-mint-deep)_55%,transparent)]"
+            : "bg-surface-raised text-ink"
+        }`}
+        aria-pressed={hasChosenNoDislikes && dislikes.length === 0}
+        disabled={isPending}
+      >
+        {onboardingCopy.nutrition.dislikesNone}
       </button>
 
       {error ? <InlineAlert tone="error">{error}</InlineAlert> : null}

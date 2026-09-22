@@ -12,10 +12,15 @@ import {
   type CycleReminderFlags,
 } from "@/lib/cycle/calendar";
 import { todayInSaoPaulo } from "@/lib/habits/day";
+import { filterDislikedFoods } from "@/lib/nutrition/disliked-foods";
 import { filterFoodAvoidSlugs } from "@/lib/nutrition/food-conditions-catalog";
 import {
   deriveCapabilityTags,
 } from "@/lib/onboarding/capabilities";
+import {
+  buildAvailableEquipmentTags,
+  selectedFromAvailableEquipmentTags,
+} from "@/lib/onboarding/equipment";
 import type { MobilityProfile } from "@/lib/onboarding/progress";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -51,6 +56,14 @@ function revalidateHealthSurfaces() {
   revalidatePath("/workouts");
   revalidatePath("/meals");
   revalidatePath("/habits");
+  revalidatePath("/progress");
+}
+
+async function clearUserDailyPlans(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string,
+) {
+  await supabase.from("user_daily_plans").delete().eq("user_id", userId);
 }
 
 async function requireUser() {
@@ -413,6 +426,51 @@ export async function updateMyClinicalConditionsAction(input: {
     return { ok: false, code: "save_failed" };
   }
 
+  await clearUserDailyPlans(supabase, user.id);
+  revalidateHealthSurfaces();
+  return { ok: true };
+}
+
+export async function updateMyEquipmentAction(input: {
+  extraEquipmentTags: string[];
+  noneSelected?: boolean;
+}): Promise<ProfileHealthResult> {
+  const { supabase, user } = await requireUser();
+  if (!user) {
+    return { ok: false, code: "unauthenticated" };
+  }
+
+  if (!(await hasAcceptedPurpose(supabase, user.id, "health_personalization"))) {
+    return { ok: false, code: "consent_required" };
+  }
+
+  const availableEquipmentTags = buildAvailableEquipmentTags(
+    input.noneSelected ? [] : input.extraEquipmentTags,
+  );
+
+  const { data: existing } = await supabase
+    .from("user_clinical_conditions")
+    .select("sex_assigned_at_birth, condition_tags, capability_tags")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const { error } = await supabase.from("user_clinical_conditions").upsert(
+    {
+      user_id: user.id,
+      sex_assigned_at_birth: existing?.sex_assigned_at_birth ?? null,
+      condition_tags: existing?.condition_tags ?? [],
+      capability_tags: existing?.capability_tags ?? [],
+      available_equipment_tags: availableEquipmentTags,
+    },
+    { onConflict: "user_id" },
+  );
+
+  if (error) {
+    console.error("updateMyEquipmentAction", error.message);
+    return { ok: false, code: "save_failed" };
+  }
+
+  await clearUserDailyPlans(supabase, user.id);
   revalidateHealthSurfaces();
   return { ok: true };
 }
@@ -421,6 +479,8 @@ export async function updateMyNutritionProfileAction(input: {
   dietPattern: DietPattern;
   avoidsTags: string[];
   noneAvoids?: boolean;
+  dislikedFoods?: string[];
+  noneDislikes?: boolean;
 }): Promise<ProfileHealthResult> {
   const { supabase, user } = await requireUser();
   if (!user) {
@@ -439,11 +499,16 @@ export async function updateMyNutritionProfileAction(input: {
     ? []
     : filterFoodAvoidSlugs(input.avoidsTags);
 
+  const dislikedFoods = input.noneDislikes
+    ? []
+    : filterDislikedFoods(input.dislikedFoods ?? []);
+
   const { error } = await supabase.from("user_nutrition_profiles").upsert(
     {
       user_id: user.id,
       diet_pattern: input.dietPattern,
       avoids_tags: avoidsTags,
+      disliked_foods: dislikedFoods,
     },
     { onConflict: "user_id" },
   );
@@ -453,6 +518,7 @@ export async function updateMyNutritionProfileAction(input: {
     return { ok: false, code: "save_failed" };
   }
 
+  await clearUserDailyPlans(supabase, user.id);
   revalidateHealthSurfaces();
   return { ok: true };
 }
@@ -462,6 +528,8 @@ export async function getMyHealthEditSnapshotAction(): Promise<
     conditionTags: string[];
     dietPattern: DietPattern;
     avoidsTags: string[];
+    dislikedFoods: string[];
+    extraEquipmentTags: string[];
     hasCycleModule: boolean;
     cycleMode: CycleMode | null;
   }>
@@ -474,12 +542,12 @@ export async function getMyHealthEditSnapshotAction(): Promise<
   const [clinical, nutrition, cycle, cycleConsent] = await Promise.all([
     supabase
       .from("user_clinical_conditions")
-      .select("condition_tags")
+      .select("condition_tags, available_equipment_tags")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
       .from("user_nutrition_profiles")
-      .select("diet_pattern, avoids_tags")
+      .select("diet_pattern, avoids_tags, disliked_foods")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
@@ -508,6 +576,10 @@ export async function getMyHealthEditSnapshotAction(): Promise<
       conditionTags: clinical.data?.condition_tags ?? [],
       dietPattern,
       avoidsTags: nutrition.data?.avoids_tags ?? [],
+      dislikedFoods: nutrition.data?.disliked_foods ?? [],
+      extraEquipmentTags: selectedFromAvailableEquipmentTags(
+        clinical.data?.available_equipment_tags ?? [],
+      ),
       hasCycleModule: cycleConsent && Boolean(cycle.data),
       cycleMode,
     },

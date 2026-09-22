@@ -5,7 +5,7 @@ interface BrandMarkProps {
   className?: string;
 }
 
-/** Circular brand mark from the official lockup (forest green + warm blush). */
+/** Official mark: peach + mint figures (favicon / compact uses). */
 export function BrandMark({ size = 40, className = "" }: BrandMarkProps) {
   return (
     <Image
@@ -13,7 +13,7 @@ export function BrandMark({ size = 40, className = "" }: BrandMarkProps) {
       alt=""
       width={size}
       height={size}
-      className={`shrink-0 ${className}`.trim()}
+      className={`shrink-0 rounded-[20%] object-cover ${className}`.trim()}
       priority
     />
   );

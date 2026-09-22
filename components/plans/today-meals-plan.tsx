@@ -15,6 +15,7 @@ import { InlineAlert } from "@/components/ui/inline-alert";
 import { Surface } from "@/components/ui/surface";
 import { TextField } from "@/components/ui/text-field";
 import { plansCopy } from "@/lib/i18n/plans-pt-br";
+import { appCopy } from "@/lib/i18n/app-pt-br";
 import { MEAL_SLOT_VALUES, type MealSlot } from "@/lib/tags/constants";
 
 interface TodayMealsPlanProps {
@@ -136,11 +137,42 @@ export function TodayMealsPlan({
                   {plansCopy.meals.customDone(customNoteForSlot)}
                 </p>
               ) : meal ? (
-                <div className="space-y-1">
-                  <p className="text-base font-semibold text-ink">{meal.title}</p>
-                  <p className="text-sm leading-relaxed text-ink-soft">
-                    {meal.description}
-                  </p>
+                <div className="space-y-3">
+                  {meal.imageSrc ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={meal.imageSrc}
+                      alt=""
+                      className="h-44 w-full rounded-2xl object-cover"
+                    />
+                  ) : null}
+                  <div className="space-y-1">
+                    <p className="text-base font-semibold text-ink">
+                      {meal.title}
+                    </p>
+                    <p className="text-sm leading-relaxed text-ink-soft">
+                      {meal.description}
+                    </p>
+                  </div>
+                  {meal.ingredients.length > 0 ? (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-ink">
+                        {appCopy.eat.ingredients}
+                      </p>
+                      <ul className="space-y-1 text-sm text-ink-soft">
+                        {meal.ingredients.map((ingredient) => (
+                          <li key={`${meal.id}-${ingredient.item}`}>
+                            {ingredient.item} — {ingredient.qty}
+                            {ingredient.alt ? (
+                              <span className="block text-ink-soft/90">
+                                {appCopy.eat.alt}: {ingredient.alt}
+                              </span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <p className="text-sm text-ink-soft">{plansCopy.meals.empty}</p>
@@ -190,18 +222,38 @@ export function TodayMealsPlan({
                   <p className="text-xs font-semibold text-ink-soft">
                     {plansCopy.meals.swapPick}
                   </p>
-                  <ul className="max-h-40 space-y-1 overflow-y-auto">
+                  <ul className="max-h-56 space-y-2 overflow-y-auto">
                     {candidatesFor(slot, meal?.id ?? null)
                       .slice(0, 12)
                       .map((candidate) => (
                         <li key={candidate.id}>
                           <button
                             type="button"
-                            className="focus-ring w-full rounded-[1rem] px-3 py-2 text-left text-sm font-medium text-ink hover:bg-mint/40"
+                            className="focus-ring flex w-full items-start gap-3 rounded-[1rem] px-2 py-2 text-left hover:bg-mint/40"
                             disabled={isPending}
                             onClick={() => swap(slot, candidate.id)}
                           >
-                            {candidate.title}
+                            {candidate.imageSrc ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={candidate.imageSrc}
+                                alt=""
+                                className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                              />
+                            ) : (
+                              <span
+                                className="h-14 w-14 shrink-0 rounded-xl bg-surface"
+                                aria-hidden
+                              />
+                            )}
+                            <span className="min-w-0 space-y-1">
+                              <span className="block text-sm font-semibold text-ink">
+                                {candidate.title}
+                              </span>
+                              <span className="line-clamp-2 block text-xs leading-relaxed text-ink-soft">
+                                {candidate.description}
+                              </span>
+                            </span>
                           </button>
                         </li>
                       ))}

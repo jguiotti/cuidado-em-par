@@ -84,6 +84,11 @@ export function TodayMovementPlan({
             ? plansCopy.movement.restSupport
             : plansCopy.movement.minutesTarget(workoutMinutesPerDay)}
         </p>
+        {!isRestDay ? (
+          <p className="text-sm leading-relaxed text-ink-soft">
+            {plansCopy.movement.mixHint}
+          </p>
+        ) : null}
       </div>
 
       {!isRestDay && exercises.length === 0 ? (
@@ -98,7 +103,15 @@ export function TodayMovementPlan({
               key={exercise.id}
               className="space-y-3 rounded-[1.25rem] bg-surface-raised p-4"
             >
-              <div className="space-y-1">
+              {exercise.imageSrc ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={exercise.imageSrc}
+                  alt=""
+                  className="h-44 w-full rounded-2xl object-cover"
+                />
+              ) : null}
+              <div className="space-y-2">
                 <p className="text-base font-semibold text-ink">
                   {exercise.title}
                 </p>
@@ -106,6 +119,9 @@ export function TodayMovementPlan({
                   {plansCopy.movement.duration(
                     exercise.estimatedDurationMinutes,
                   )}
+                </p>
+                <p className="text-sm leading-relaxed text-ink-soft">
+                  {exercise.description}
                 </p>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
@@ -139,16 +155,36 @@ export function TodayMovementPlan({
                   <p className="text-xs font-semibold text-ink-soft">
                     {plansCopy.movement.swapPick}
                   </p>
-                  <ul className="max-h-40 space-y-1 overflow-y-auto">
+                  <ul className="max-h-56 space-y-2 overflow-y-auto">
                     {candidatesByExclude.slice(0, 12).map((candidate) => (
                       <li key={candidate.id}>
                         <button
                           type="button"
-                          className="focus-ring w-full rounded-[1rem] px-3 py-2 text-left text-sm font-medium text-ink hover:bg-mint/40"
+                          className="focus-ring flex w-full items-start gap-3 rounded-[1rem] px-2 py-2 text-left hover:bg-mint/40"
                           disabled={isPending}
                           onClick={() => swap(exercise.id, candidate.id)}
                         >
-                          {candidate.title}
+                          {candidate.imageSrc ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={candidate.imageSrc}
+                              alt=""
+                              className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                            />
+                          ) : (
+                            <span
+                              className="h-14 w-14 shrink-0 rounded-xl bg-surface"
+                              aria-hidden
+                            />
+                          )}
+                          <span className="min-w-0 space-y-1">
+                            <span className="block text-sm font-semibold text-ink">
+                              {candidate.title}
+                            </span>
+                            <span className="line-clamp-2 block text-xs leading-relaxed text-ink-soft">
+                              {candidate.description}
+                            </span>
+                          </span>
                         </button>
                       </li>
                     ))}

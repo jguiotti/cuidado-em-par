@@ -10,6 +10,7 @@ import {
 import { ConsentsPanel } from "@/components/account/consents-panel";
 import { CycleCalendarPanel } from "@/components/account/cycle-calendar-panel";
 import { DeleteAccountPanel } from "@/components/account/delete-account-panel";
+import { EquipmentEditPanel } from "@/components/account/equipment-edit-panel";
 import { ExportDataPanel } from "@/components/account/export-data-panel";
 import { HealthConditionsEditPanel } from "@/components/account/health-conditions-edit-panel";
 import { InstallPwaPanel } from "@/components/account/install-pwa-panel";
@@ -101,9 +102,13 @@ export default async function AccountPage() {
           <HealthConditionsEditPanel
             initialConditions={health.conditionTags}
           />
+          <EquipmentEditPanel
+            initialSelected={health.extraEquipmentTags}
+          />
           <NutritionEditPanel
             initialDietPattern={health.dietPattern}
             initialAvoids={health.avoidsTags}
+            initialDislikes={health.dislikedFoods}
           />
         </section>
       ) : null}

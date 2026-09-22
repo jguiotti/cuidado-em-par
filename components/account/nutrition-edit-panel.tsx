@@ -21,6 +21,7 @@ import { Surface } from "@/components/ui/surface";
 import { TextField } from "@/components/ui/text-field";
 import { accountCopy } from "@/lib/i18n/account-pt-br";
 import { onboardingCopy } from "@/lib/i18n/onboarding-pt-br";
+import { normalizeDislikedFood } from "@/lib/nutrition/disliked-foods";
 import {
   getFoodAvoidCondition,
   searchFoodAvoidConditions,
@@ -33,6 +34,7 @@ import {
 interface NutritionEditPanelProps {
   initialDietPattern: DietPattern;
   initialAvoids: string[];
+  initialDislikes?: string[];
 }
 
 const MIN_QUERY_LENGTH = 1;
@@ -40,16 +42,23 @@ const MIN_QUERY_LENGTH = 1;
 export function NutritionEditPanel({
   initialDietPattern,
   initialAvoids,
+  initialDislikes = [],
 }: NutritionEditPanelProps) {
   const router = useRouter();
   const listId = "account-nutrition-search-results";
   const searchRef = useRef<HTMLInputElement>(null);
+  const dislikeRef = useRef<HTMLInputElement>(null);
   const [dietPattern, setDietPattern] =
     useState<DietPattern>(initialDietPattern);
   const [avoids, setAvoids] = useState<string[]>(initialAvoids);
   const [query, setQuery] = useState("");
   const [hasChosenNoAvoids, setHasChosenNoAvoids] = useState(
     initialAvoids.length === 0,
+  );
+  const [dislikes, setDislikes] = useState<string[]>(initialDislikes);
+  const [dislikeDraft, setDislikeDraft] = useState("");
+  const [hasChosenNoDislikes, setHasChosenNoDislikes] = useState(
+    initialDislikes.length === 0,
   );
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -74,7 +83,9 @@ export function NutritionEditPanel({
   );
 
   const showResults = query.trim().length >= MIN_QUERY_LENGTH;
-  const canSave = hasChosenNoAvoids || avoids.length > 0;
+  const canSave =
+    (hasChosenNoAvoids || avoids.length > 0) &&
+    (hasChosenNoDislikes || dislikes.length > 0);
 
   function addAvoid(slug: string) {
     setHasChosenNoAvoids(false);
@@ -95,10 +106,42 @@ export function NutritionEditPanel({
     setQuery("");
   }
 
+  function addDislike() {
+    const normalized = normalizeDislikedFood(dislikeDraft);
+    if (!normalized) {
+      setError(onboardingCopy.nutrition.dislikesInvalid);
+      return;
+    }
+    setError(null);
+    setHasChosenNoDislikes(false);
+    setDislikes((current) =>
+      current.includes(normalized) ? current : [...current, normalized],
+    );
+    setDislikeDraft("");
+    dislikeRef.current?.focus();
+  }
+
+  function removeDislike(token: string) {
+    setDislikes((current) => current.filter((item) => item !== token));
+  }
+
+  function chooseNoDislikes() {
+    setHasChosenNoDislikes(true);
+    setDislikes([]);
+    setDislikeDraft("");
+  }
+
   function handleSearchKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter" && searchResults[0]) {
       event.preventDefault();
       addAvoid(searchResults[0].slug);
+    }
+  }
+
+  function handleDislikeKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      addDislike();
     }
   }
 
@@ -117,6 +160,8 @@ export function NutritionEditPanel({
         dietPattern,
         avoidsTags: hasChosenNoAvoids ? [] : avoids,
         noneAvoids: hasChosenNoAvoids,
+        dislikedFoods: hasChosenNoDislikes ? [] : dislikes,
+        noneDislikes: hasChosenNoDislikes,
       });
 
       if (!result.ok) {
@@ -237,6 +282,71 @@ export function NutritionEditPanel({
           disabled={isPending}
         >
           {onboardingCopy.nutrition.none}
+        </button>
+
+        <div className="space-y-2">
+          <p className="text-sm font-semibold text-ink">
+            {onboardingCopy.nutrition.dislikesLegend}
+          </p>
+          <p className="text-sm leading-relaxed text-ink-soft">
+            {onboardingCopy.nutrition.dislikesHint}
+          </p>
+        </div>
+
+        {dislikes.length > 0 ? (
+          <ul className="flex flex-wrap gap-2">
+            {dislikes.map((token) => (
+              <li key={token}>
+                <button
+                  type="button"
+                  className="focus-ring inline-flex min-h-10 items-center gap-2 rounded-[var(--radius-pill)] bg-mint px-3 py-1 text-sm font-semibold text-mint-deep"
+                  onClick={() => removeDislike(token)}
+                  aria-label={`${onboardingCopy.nutrition.remove}: ${token}`}
+                >
+                  {token}
+                  <span aria-hidden>×</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1">
+            <TextField
+              ref={dislikeRef}
+              label={onboardingCopy.nutrition.dislikesLabel}
+              name="dislikeFood"
+              value={dislikeDraft}
+              onChange={(event) => setDislikeDraft(event.target.value)}
+              onKeyDown={handleDislikeKeyDown}
+              placeholder={onboardingCopy.nutrition.dislikesPlaceholder}
+              disabled={isPending}
+              autoComplete="off"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={addDislike}
+            disabled={isPending}
+            className="w-full sm:w-auto"
+          >
+            {onboardingCopy.nutrition.dislikesAdd}
+          </Button>
+        </div>
+
+        <button
+          type="button"
+          className={`focus-ring rounded-[1.25rem] px-4 py-3 text-left text-sm font-semibold ${
+            hasChosenNoDislikes && dislikes.length === 0
+              ? "bg-mint text-ink"
+              : "bg-surface-raised text-ink-soft"
+          }`}
+          onClick={chooseNoDislikes}
+          disabled={isPending}
+        >
+          {onboardingCopy.nutrition.dislikesNone}
         </button>
 
         <p className="text-xs leading-relaxed text-ink-soft">

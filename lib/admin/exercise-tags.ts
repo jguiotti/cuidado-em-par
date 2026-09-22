@@ -11,6 +11,7 @@ export const EXERCISE_EQUIPMENT_SLUGS = [
   TAG_SLUGS.towel,
   TAG_SLUGS.foodBag,
   "resistance-band",
+  "dumbbells",
   "broomstick",
   "backpack",
   "cushion",

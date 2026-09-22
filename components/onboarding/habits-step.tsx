@@ -65,9 +65,9 @@ export function HabitsStep({ initialWaterGoalMl = 2000 }: HabitsStepProps) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
       <ProgressSteps
-        current={8}
+        current={9}
         total={ONBOARDING_TOTAL_STEPS}
-        label={onboardingCopy.progressLabel(8, ONBOARDING_TOTAL_STEPS)}
+        label={onboardingCopy.progressLabel(9, ONBOARDING_TOTAL_STEPS)}
       />
 
       <div className="space-y-3">

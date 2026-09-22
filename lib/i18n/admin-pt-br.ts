@@ -123,6 +123,7 @@ export const adminCopy = {
     towel: "Toalha",
     "food-bag": "Saco de alimento",
     "resistance-band": "Elástico",
+    dumbbells: "Halteres",
     broomstick: "Cabo de vassoura",
     backpack: "Mochila",
     cushion: "Almofada",

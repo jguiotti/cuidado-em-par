@@ -1,11 +1,14 @@
 /**
  * Deterministic daily movement packing from safe exercises + availability prefs.
  * No generative AI — seeded shuffle of list_safe results.
+ * Count scales with available minutes (cap 6); prefers alternating lower/upper body.
  */
 
 import { TAG_SLUGS } from "@/lib/tags/constants";
 
 export type CardioSuggestion = "walk" | "run" | "seated" | "none";
+
+export type BodyRegion = "lower" | "upper" | "neutral";
 
 export interface PackableExercise {
   id: string;
@@ -31,6 +34,12 @@ export interface MovementPackResult {
   cardioSuggestion: CardioSuggestion;
   totalMinutes: number;
 }
+
+/** Hard cap for a single day's planned strength/mobility moves (cardio is separate). */
+export const MAX_DAILY_EXERCISES = 6;
+
+const LOWER_MUSCLES = new Set(["legs", "glutes"]);
+const UPPER_MUSCLES = new Set(["chest", "back", "shoulders", "arms"]);
 
 /** FNV-1a style hash for stable per-user-day seeds. */
 export function hashSeed(text: string): number {
@@ -72,6 +81,33 @@ export function weekdayInSaoPaulo(isoDay: string): number {
   return date.getUTCDay();
 }
 
+/**
+ * How many exercises fit a realistic day for the chosen time budget.
+ * ~1 move per 8 minutes; minimum 2 when there is time; maximum 6.
+ */
+export function targetExerciseCount(budgetMinutes: number): number {
+  const budget = clampWorkoutMinutes(budgetMinutes);
+  return Math.min(
+    MAX_DAILY_EXERCISES,
+    Math.max(2, Math.round(budget / 8)),
+  );
+}
+
+export function classifyBodyRegion(muscles: string[]): BodyRegion {
+  const hasLower = muscles.some((muscle) => LOWER_MUSCLES.has(muscle));
+  const hasUpper = muscles.some((muscle) => UPPER_MUSCLES.has(muscle));
+  if (hasLower && !hasUpper) {
+    return "lower";
+  }
+  if (hasUpper && !hasLower) {
+    return "upper";
+  }
+  if (hasLower && hasUpper) {
+    return "neutral";
+  }
+  return "neutral";
+}
+
 export function suggestCardio(
   capabilityTags: string[],
   exercises: PackableExercise[],
@@ -94,70 +130,91 @@ export function suggestCardio(
   return "none";
 }
 
+function takeFromPool(
+  pool: PackableExercise[],
+  usedIds: Set<string>,
+  remainingMinutes: number,
+): PackableExercise | null {
+  for (const item of pool) {
+    if (usedIds.has(item.id)) {
+      continue;
+    }
+    const duration = Math.max(1, item.estimatedDurationMinutes);
+    if (duration > remainingMinutes && remainingMinutes > 0) {
+      continue;
+    }
+    return item;
+  }
+  // Prefer something even if slightly over remaining when pool is tight
+  for (const item of pool) {
+    if (!usedIds.has(item.id)) {
+      return item;
+    }
+  }
+  return null;
+}
+
 /**
- * Prefer variety across primary muscle groups while filling the minute budget.
+ * Pack up to targetCount exercises within the minute budget,
+ * alternating lower and upper body when both are available.
  */
 export function packExercisesForBudget(
   exercises: PackableExercise[],
   budgetMinutes: number,
   seed: number,
+  maxCount: number = targetExerciseCount(budgetMinutes),
 ): { ids: string[]; totalMinutes: number } {
-  if (exercises.length === 0 || budgetMinutes < 1) {
+  if (exercises.length === 0 || budgetMinutes < 1 || maxCount < 1) {
     return { ids: [], totalMinutes: 0 };
   }
 
+  const targetCount = Math.min(MAX_DAILY_EXERCISES, Math.max(1, maxCount));
   const shuffled = seededShuffle(exercises, seed);
-  const selected: PackableExercise[] = [];
-  const usedMuscles = new Set<string>();
-  let total = 0;
 
-  // First pass: prefer unused primary muscles
-  for (const item of shuffled) {
-    const duration = Math.max(1, item.estimatedDurationMinutes);
-    if (total + duration > budgetMinutes) {
-      continue;
-    }
-    const primary = item.targetMuscles[0] ?? "general";
-    if (usedMuscles.has(primary) && selected.length > 0) {
-      continue;
-    }
-    selected.push(item);
-    usedMuscles.add(primary);
-    total += duration;
-    if (total >= budgetMinutes) {
+  const lower = shuffled.filter(
+    (item) => classifyBodyRegion(item.targetMuscles) === "lower",
+  );
+  const upper = shuffled.filter(
+    (item) => classifyBodyRegion(item.targetMuscles) === "upper",
+  );
+  const neutral = shuffled.filter(
+    (item) => classifyBodyRegion(item.targetMuscles) === "neutral",
+  );
+
+  const selected: PackableExercise[] = [];
+  const usedIds = new Set<string>();
+  let total = 0;
+  let preferLower = seed % 2 === 0;
+
+  while (selected.length < targetCount) {
+    const remainingMinutes = budgetMinutes - total;
+    if (remainingMinutes <= 0 && selected.length > 0) {
       break;
     }
-  }
 
-  // Second pass: fill remaining minutes
-  if (total < budgetMinutes) {
-    for (const item of shuffled) {
-      if (selected.some((picked) => picked.id === item.id)) {
-        continue;
-      }
-      const duration = Math.max(1, item.estimatedDurationMinutes);
-      if (total + duration > budgetMinutes) {
-        continue;
-      }
-      selected.push(item);
-      total += duration;
-      if (total >= budgetMinutes) {
-        break;
-      }
+    const primaryPool = preferLower ? lower : upper;
+    const secondaryPool = preferLower ? upper : lower;
+
+    let pick =
+      takeFromPool(primaryPool, usedIds, remainingMinutes) ??
+      takeFromPool(secondaryPool, usedIds, remainingMinutes) ??
+      takeFromPool(neutral, usedIds, remainingMinutes) ??
+      takeFromPool(shuffled, usedIds, remainingMinutes);
+
+    if (!pick) {
+      break;
     }
+
+    selected.push(pick);
+    usedIds.add(pick.id);
+    total += Math.max(1, pick.estimatedDurationMinutes);
+    preferLower = !preferLower;
   }
 
-  // If nothing fit, take the shortest single exercise under budget or first item
   if (selected.length === 0) {
     const shortest = [...exercises].sort(
       (a, b) => a.estimatedDurationMinutes - b.estimatedDurationMinutes,
     )[0];
-    if (shortest && shortest.estimatedDurationMinutes <= budgetMinutes) {
-      return {
-        ids: [shortest.id],
-        totalMinutes: shortest.estimatedDurationMinutes,
-      };
-    }
     if (shortest) {
       return {
         ids: [shortest.id],
@@ -188,7 +245,8 @@ export function buildMovementPack(input: MovementPackInput): MovementPackResult 
   }
 
   const seed = hashSeed(`${input.userId}:${input.dayIso}:movement`);
-  const packed = packExercisesForBudget(input.exercises, budget, seed);
+  const count = targetExerciseCount(budget);
+  const packed = packExercisesForBudget(input.exercises, budget, seed, count);
 
   return {
     isRestDay: false,

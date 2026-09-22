@@ -65,9 +65,9 @@ export function CycleStep() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-6">
       <ProgressSteps
-        current={7}
+        current={8}
         total={ONBOARDING_TOTAL_STEPS}
-        label={onboardingCopy.progressLabel(7, ONBOARDING_TOTAL_STEPS)}
+        label={onboardingCopy.progressLabel(8, ONBOARDING_TOTAL_STEPS)}
       />
 
       <div className="space-y-3">

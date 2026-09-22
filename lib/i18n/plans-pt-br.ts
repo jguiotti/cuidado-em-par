@@ -8,6 +8,7 @@ export const plansCopy = {
     restSupport:
       "Hoje não há série marcada. Se quiser, registre uma caminhada leve ou só cuide da água e do sono.",
     minutesTarget: (n: number) => `Meta de cerca de ${n} min`,
+    mixHint: "Mistura membros inferiores e superiores no seu tempo disponível.",
     empty:
       "Ainda não há movimentos seguros para montar o plano. Revise condições na Conta se precisar.",
     markDone: "Marquei como feito",

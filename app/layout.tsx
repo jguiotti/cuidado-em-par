@@ -22,10 +22,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/brand/mark.png", sizes: "any", type: "image/png" },
       { url: "/icons/icon.png", sizes: "512x512", type: "image/png" },
-      { url: "/icons/icon.svg", type: "image/svg+xml" },
     ],
-    apple: [{ url: "/icons/icon.png", sizes: "512x512", type: "image/png" }],
+    apple: [{ url: "/apple-icon.png", sizes: "180x180", type: "image/png" }],
   },
 };
 

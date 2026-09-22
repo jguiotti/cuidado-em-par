@@ -5,8 +5,10 @@
 
 import {
   buildMovementPack,
+  classifyBodyRegion,
   packExercisesForBudget,
   suggestCardio,
+  targetExerciseCount,
 } from "../lib/plans/daily-movement";
 import { pickMealsForDay } from "../lib/plans/daily-meals";
 import { TAG_SLUGS } from "../lib/tags/constants";
@@ -46,11 +48,58 @@ const exercises = [
     targetMuscles: ["full-body"],
     intensityTags: [TAG_SLUGS.lowImpact],
   },
+  {
+    id: "e",
+    title: "Lunge",
+    estimatedDurationMinutes: 5,
+    targetMuscles: ["glutes"],
+    intensityTags: [TAG_SLUGS.lowImpact],
+  },
+  {
+    id: "f",
+    title: "Row",
+    estimatedDurationMinutes: 5,
+    targetMuscles: ["back"],
+    intensityTags: [TAG_SLUGS.lowImpact],
+  },
+  {
+    id: "g",
+    title: "Shoulder",
+    estimatedDurationMinutes: 5,
+    targetMuscles: ["shoulders"],
+    intensityTags: [TAG_SLUGS.lowImpact],
+  },
+  {
+    id: "h",
+    title: "Arms",
+    estimatedDurationMinutes: 5,
+    targetMuscles: ["arms"],
+    intensityTags: [TAG_SLUGS.lowImpact],
+  },
 ];
 
-const packed = packExercisesForBudget(exercises, 15, 42);
-assert(packed.totalMinutes <= 15, "budget exceeded");
-assert(packed.ids.length >= 1, "expected at least one exercise");
+assert(targetExerciseCount(15) === 2, "15 min → 2 exercises");
+assert(targetExerciseCount(20) === 3, "20 min → 3 exercises");
+assert(targetExerciseCount(30) === 4, "30 min → 4 exercises");
+assert(targetExerciseCount(40) === 5, "40 min → 5 exercises");
+assert(targetExerciseCount(50) === 6, "50 min → 6 exercises");
+assert(targetExerciseCount(90) === 6, "90 min still caps at 6");
+
+assert(classifyBodyRegion(["legs"]) === "lower", "legs = lower");
+assert(classifyBodyRegion(["chest"]) === "upper", "chest = upper");
+assert(classifyBodyRegion(["core"]) === "neutral", "core = neutral");
+
+const packed = packExercisesForBudget(exercises, 30, 42);
+assert(packed.ids.length <= 4, "30 min packs at most 4");
+assert(packed.ids.length >= 2, "expected at least two when pool allows");
+
+const byId = new Map(exercises.map((item) => [item.id, item]));
+const regions = packed.ids.map(
+  (id) => classifyBodyRegion(byId.get(id)?.targetMuscles ?? []),
+);
+const hasLower = regions.some((region) => region === "lower");
+const hasUpper = regions.some((region) => region === "upper");
+assert(hasLower && hasUpper, "pack mixes lower and upper when both exist");
 
 const rest = buildMovementPack({
   userId: "user-1",
@@ -74,7 +123,7 @@ const work = buildMovementPack({
   exercises,
 });
 assert(work.isRestDay === false, "Monday should be workout day");
-assert(work.exerciseIds.length >= 1, "workout day packs exercises");
+assert(work.exerciseIds.length === 3, "20 min → 3 exercises");
 assert(work.cardioSuggestion === "walk", "standing suggests walk");
 
 assert(

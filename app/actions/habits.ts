@@ -18,6 +18,7 @@ import {
   type TodayRitualSnapshot,
 } from "@/lib/habits/types";
 import { addWaterMl, clampWaterMl } from "@/lib/habits/water";
+import { isExerciseCompatibleWithEquipment } from "@/lib/onboarding/equipment";
 import { TAG_SLUGS } from "@/lib/tags/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { SafeExerciseCard } from "@/app/actions/safe-content";
@@ -448,10 +449,23 @@ export async function listSafeActivePauseExercisesAction(): Promise<
     return { ok: false, code: "load_failed" };
   }
 
+  const { data: clinical } = await supabase
+    .from("user_clinical_conditions")
+    .select("available_equipment_tags")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const availableEquipment =
+    clinical?.available_equipment_tags ?? ["bodyweight"];
+
   const activePause = TAG_SLUGS.activePause;
   const items: SafeExerciseCard[] = (data ?? [])
-    .filter((row: { intensity_tags: string[] | null }) =>
-      (row.intensity_tags ?? []).includes(activePause),
+    .filter((row: { intensity_tags: string[] | null; equipment_tags: string[] | null }) =>
+      (row.intensity_tags ?? []).includes(activePause) &&
+      isExerciseCompatibleWithEquipment(
+        row.equipment_tags ?? [],
+        availableEquipment,
+      ),
     )
     .slice(0, 3)
     .map(

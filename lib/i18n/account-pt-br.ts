@@ -75,7 +75,10 @@ export const accountCopy = {
       "Adicione o que surgiu ou remova o que já não se aplica — por exemplo, após uma cirurgia ou uma nova lesão.",
     nutritionTitle: "Alimentação e restrições",
     nutritionSupport:
-      "Padrão alimentar e alergias ou intolerâncias. O cardápio seguro acompanha cada alteração.",
+      "Padrão alimentar, alergias ou intolerâncias e alimentos que você prefere evitar. Receitas com substituição possível ainda aparecem.",
+    equipmentTitle: "Itens para movimento em casa",
+    equipmentSupport:
+      "Busque e marque o que você tem: elástico, cadeira, garrafa, toalha, halteres e outros do catálogo. O que não estiver marcado fica fora das sugestões que dependem desse item.",
     save: "Salvar cuidados",
     motorHint:
       "As listas de Mover e Comer passam a usar só o perfil atualizado.",

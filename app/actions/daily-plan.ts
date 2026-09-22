@@ -22,6 +22,7 @@ import {
 } from "@/lib/plans/daily-meals";
 import {
   buildMovementPack,
+  targetExerciseCount,
   type CardioSuggestion,
   weekdayInSaoPaulo,
 } from "@/lib/plans/daily-movement";
@@ -163,7 +164,34 @@ export async function getOrCreateTodayPlanAction(): Promise<
   let cardioSuggestion = (planResult.data?.cardio_suggestion ??
     "none") as CardioSuggestion;
 
-  if (!planResult.data) {
+  const packableExercises = exercises.map((item) => ({
+    id: item.id,
+    title: item.title,
+    estimatedDurationMinutes: item.estimatedDurationMinutes,
+    targetMuscles: item.targetMuscles,
+    intensityTags: item.intensityTags,
+  }));
+
+  const expectedCount = targetExerciseCount(prefs.workoutMinutesPerDay);
+  const safeExerciseIdSet = new Set(exercises.map((item) => item.id));
+  const hasUnsafePlannedExercise = exerciseIds.some(
+    (id) => !safeExerciseIdSet.has(id),
+  );
+  const plannedMealIds = Object.values(mealsMap).filter(
+    (id): id is string => typeof id === "string" && id.length > 0,
+  );
+  const safeMealIdSet = new Set(meals.map((item) => item.id));
+  const hasUnsafePlannedMeal = plannedMealIds.some(
+    (id) => !safeMealIdSet.has(id),
+  );
+  const shouldRebuildMovement =
+    !planResult.data ||
+    hasUnsafePlannedExercise ||
+    (!isRestDay &&
+      exerciseIds.length > expectedCount &&
+      exerciseIds.length > 0);
+
+  if (!planResult.data || shouldRebuildMovement) {
     const pack = buildMovementPack({
       userId: user.id,
       dayIso: day,
@@ -171,38 +199,80 @@ export async function getOrCreateTodayPlanAction(): Promise<
       workoutWeekdays: prefs.workoutWeekdays,
       workoutMinutesPerDay: prefs.workoutMinutesPerDay,
       capabilityTags,
-      exercises: exercises.map((item) => ({
-        id: item.id,
-        title: item.title,
-        estimatedDurationMinutes: item.estimatedDurationMinutes,
-        targetMuscles: item.targetMuscles,
-        intensityTags: item.intensityTags,
-      })),
+      exercises: packableExercises,
     });
     exerciseIds = pack.exerciseIds;
     isRestDay = pack.isRestDay;
     cardioSuggestion = pack.cardioSuggestion;
+
+    if (!planResult.data) {
+      mealsMap = pickMealsForDay({
+        userId: user.id,
+        dayIso: day,
+        meals: meals.map((item) => ({ id: item.id, mealSlot: item.mealSlot })),
+      });
+
+      const { error: insertError } = await supabase
+        .from("user_daily_plans")
+        .insert({
+          user_id: user.id,
+          day,
+          exercise_ids: exerciseIds,
+          meals: mealsMap,
+          is_rest_day: isRestDay,
+          cardio_suggestion: cardioSuggestion,
+        });
+
+      if (insertError) {
+        console.error("getOrCreateTodayPlanAction insert", insertError.message);
+        return { ok: false, code: "save_failed" };
+      }
+    } else {
+      const mealPatch = hasUnsafePlannedMeal
+        ? pickMealsForDay({
+            userId: user.id,
+            dayIso: day,
+            meals: meals.map((item) => ({
+              id: item.id,
+              mealSlot: item.mealSlot,
+            })),
+          })
+        : null;
+      if (mealPatch) {
+        mealsMap = mealPatch;
+      }
+
+      const { error: updateError } = await supabase
+        .from("user_daily_plans")
+        .update({
+          exercise_ids: exerciseIds,
+          ...(mealPatch ? { meals: mealPatch } : {}),
+          is_rest_day: isRestDay,
+          cardio_suggestion: cardioSuggestion,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id)
+        .eq("day", day);
+
+      if (updateError) {
+        console.error("getOrCreateTodayPlanAction rebuild", updateError.message);
+        return { ok: false, code: "save_failed" };
+      }
+    }
+  } else if (hasUnsafePlannedMeal) {
     mealsMap = pickMealsForDay({
       userId: user.id,
       dayIso: day,
       meals: meals.map((item) => ({ id: item.id, mealSlot: item.mealSlot })),
     });
-
-    const { error: insertError } = await supabase
+    await supabase
       .from("user_daily_plans")
-      .insert({
-        user_id: user.id,
-        day,
-        exercise_ids: exerciseIds,
+      .update({
         meals: mealsMap,
-        is_rest_day: isRestDay,
-        cardio_suggestion: cardioSuggestion,
-      });
-
-    if (insertError) {
-      console.error("getOrCreateTodayPlanAction insert", insertError.message);
-      return { ok: false, code: "save_failed" };
-    }
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", user.id)
+      .eq("day", day);
   }
 
   const exerciseById = new Map(exercises.map((item) => [item.id, item]));

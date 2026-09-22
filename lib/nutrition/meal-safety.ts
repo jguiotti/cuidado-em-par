@@ -4,6 +4,7 @@
  * diet_compatible_tags consistent. Mirrors list_safe_meals offline.
  */
 
+import { mealBlockedByDislikedFoods } from "@/lib/nutrition/disliked-foods";
 import { FOOD_AVOID_SLUGS } from "@/lib/nutrition/food-conditions-catalog";
 import { TAG_SLUGS } from "@/lib/tags/constants";
 
@@ -27,6 +28,7 @@ export interface MealSafetyShape {
 export interface NutritionProfileSafetyInput {
   dietPattern: "no-restriction" | "vegetarian" | "vegan" | string;
   avoidsTags: string[];
+  dislikedFoods?: string[];
 }
 
 const ANIMAL_FOR_VEGAN = new Set(["meat", "fish", "egg", "lactose"]);
@@ -189,13 +191,25 @@ export function isMealSafeForProfile(
   }
 
   if (profile.dietPattern === "vegan") {
-    return meal.dietCompatibleTags.includes("vegan");
+    if (!meal.dietCompatibleTags.includes("vegan")) {
+      return false;
+    }
+  } else if (profile.dietPattern === "vegetarian") {
+    if (
+      !meal.dietCompatibleTags.includes("vegetarian") &&
+      !meal.dietCompatibleTags.includes("vegan")
+    ) {
+      return false;
+    }
   }
-  if (profile.dietPattern === "vegetarian") {
-    return (
-      meal.dietCompatibleTags.includes("vegetarian") ||
-      meal.dietCompatibleTags.includes("vegan")
-    );
+
+  if (
+    mealBlockedByDislikedFoods(
+      meal.ingredients,
+      profile.dislikedFoods ?? [],
+    )
+  ) {
+    return false;
   }
 
   return true;
