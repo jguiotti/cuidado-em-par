@@ -276,24 +276,29 @@ export default async function HomePage() {
       />
 
       <div className="flex flex-col gap-2 pb-2 sm:flex-row sm:justify-center">
-        <Link
-          href="/account"
-          className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
+        <nav
+          aria-label={habitsCopy.home.moreLinksLabel}
+          className="flex flex-col gap-2 sm:flex-row sm:justify-center"
         >
-          {habitsCopy.prefs.linkFromHome}
-        </Link>
-        <Link
-          href="/progress"
-          className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
-        >
-          Ver progresso
-        </Link>
-        <Link
-          href="/circle"
-          className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
-        >
-          Abrir círculo
-        </Link>
+          <Link
+            href="/habits"
+            className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
+          >
+            {habitsCopy.prefs.linkFromHome}
+          </Link>
+          <Link
+            href="/progress"
+            className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
+          >
+            {habitsCopy.home.openProgress}
+          </Link>
+          <Link
+            href="/circle"
+            className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
+          >
+            {habitsCopy.home.circleOpen}
+          </Link>
+        </nav>
       </div>
 
       <p className="pb-2 text-center text-sm leading-relaxed text-ink-soft">

@@ -25,6 +25,7 @@ function isAppPath(pathname: string) {
     pathname.startsWith("/workouts") ||
     pathname.startsWith("/meals") ||
     pathname.startsWith("/habits") ||
+    pathname.startsWith("/progress") ||
     pathname.startsWith("/circle") ||
     pathname.startsWith("/account")
   );

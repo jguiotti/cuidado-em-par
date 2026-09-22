@@ -6,6 +6,8 @@ description: Planejar uma funcionalidade do zero sem escrever código
 
 Orquestra a squad **antes** de qualquer código. Use quando a pessoa usuária descrever uma tela, hábito, treino, receita, grupo ou coleta de dado.
 
+O **MVP está finalizado** (`docs/mvp-finalizado.md`). Trate pedidos novos como **pós-MVP**, salvo hotfix clínico/LGPD.
+
 ## Antes de responder
 Leia, nesta ordem, com a ferramenta de leitura de arquivos:
 1. `.cursor/rules/00-contexto-do-projeto.mdc`
@@ -21,7 +23,7 @@ Leia, nesta ordem, com a ferramenta de leitura de arquivos:
 Não implemente. Não invente treino nem receita por IA. Motor = tags.
 
 ## Fluxo (nesta ordem)
-1. **Product Manager:** problema, para quem, MVP, fora de escopo, aceite.
+1. **Product Manager:** problema, para quem, recorte pós-MVP (ou hotfix), fora de escopo, aceite.
 2. **Educador Físico e/ou Nutricionista:** tags de bloqueio e permissão, riscos clínicos.
 3. **Especialista LGPD:** classificação do dado, consentimento, RLS, o que não pode ir para perfil público.
 4. **Gerente de Tecnologia:** agentes, tarefas, ordem, riscos de infra.

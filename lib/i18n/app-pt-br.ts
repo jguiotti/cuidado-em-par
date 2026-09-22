@@ -1,4 +1,8 @@
 export const appCopy = {
+  topBar: {
+    privacy: "Privacidade e proteção de dados",
+    account: "Conta",
+  },
   nav: {
     home: "Início",
     move: "Rotina",

@@ -1,17 +1,20 @@
 ---
 title: Arquitetura e regras de negócio — Cuidado em Par (MVP)
-status: aprovado para implementação (Gerente de Tecnologia, PM, Arquiteto, DevOps)
+status: MVP finalizado (2026-09-22) — fonte da verdade do modelo entregue; mudanças pós-MVP via roadmap
 ---
 
 # Arquitetura e regras de negócio — MVP
 
-Este documento é a fonte da verdade para o primeiro corte do produto. Não usa inteligência artificial generativa. O motor é cruzamento relacional de tags no PostgreSQL (Supabase).
+Este documento é a fonte da verdade do **MVP concluído**. Não usa inteligência artificial generativa. O motor é cruzamento relacional de tags no PostgreSQL (Supabase).
+
+**Fechamento do MVP:** `docs/mvp-finalizado.md`  
+**Ideias e ciclos seguintes:** `docs/roadmap-pos-mvp-e-sprints.md`
 
 ## 1. O que entra no MVP
 
 Problema: a pessoa cria a conta, declara contexto físico e alimentar, e recebe só conteúdo seguro (calistenia acessível + refeições baratas), com hábitos diários e motivação em par ou grupo.
 
-Sucesso: consistência de hábito (treino feito, água, pausa ativa, refeição do dia), nunca estética, peso ou ranking de corpo.
+Sucesso: consistência de hábito (treino feito, água, pausa ativa, refeição do dia, descanso sem culpa), nunca estética, peso ou ranking de corpo.
 
 ### Entra
 - Conta (Supabase Auth) e consentimento LGPD antes de dado de saúde
@@ -33,7 +36,8 @@ Sucesso: consistência de hábito (treino feito, água, pausa ativa, refeição 
 - Admin lendo clínica, biometria ou ciclo de quem usa o app
 - IA gerando treino, dieta ou diagnóstico
 
-Roadmap completo de sprints e ideias pós-MVP: `docs/roadmap-pos-mvp-e-sprints.md`.
+Roadmap pós-MVP e preparação React Native: `docs/roadmap-pos-mvp-e-sprints.md`.  
+Índice de fechamento: `docs/mvp-finalizado.md`.
 
 ## 2. O que aproveitar e o que descartar do rascunho anterior
 
@@ -80,44 +84,52 @@ Proibido no perfil público e no feed do grupo: lesão, peso, menstruação, ges
 - Identidade de gênero é campo opcional de respeito e comunidade. **Não dispara** treino, dieta nem ciclo.
 - Módulo “ciclo menstrual ou gestação” aparece para qualquer perfil, com pergunta explícita: deseja adaptar treino e alimentação a isso?
 - Respostas: não agora | ciclo menstrual | gestação | pós-gestação.
-- Gestação pede trimestre (1, 2, 3) e grava tags `gestacao-trimestre-n`.
-- Ciclo grava fase atual só quando a pessoa informar (cadastro inicial pode ser “não sei a fase”; o filtro usa tag branda `ciclo-ativo` até haver fase).
+- Gestação pede trimestre (1, 2, 3) e grava tags `pregnancy-trimester-1` … `pregnancy-trimester-3`.
+- Pós-gestação grava `postpartum`.
+- Ciclo grava fase atual só quando a pessoa informar (cadastro inicial pode ser “não sei a fase”; o filtro usa tag branda `cycle-active` até haver fase).
 - Nunca rotular treino como masculino/feminino.
 
-### 3.4 Motor de exercícios (duas travas)
-Seja `U` o conjunto de tags clínicas da pessoa e `C` o conjunto de capacidades da pessoa.
+### 3.4 Motor de exercícios (duas travas + equipamento)
+Seja `U` o conjunto de tags clínicas **e fases** da pessoa e `C` o conjunto de capacidades da pessoa.
 
 Um exercício `E` só é oferecido se:
-1. **Exclusão:** `E.contraindication_tags ∩ U = vazio`
-2. **Capacidade:** `E.required_capability_tags ⊆ C` (todo requisito do exercício a pessoa atende)
-3. Equipamento do exercício está na lista permitida do produto (peso corporal ou item doméstico). Academia e máquina não entram no cadastro padrão.
+1. **Exclusão:** `E.contraindication_tags ∩ U = vazio` **e** nenhuma `intensity_tag` de `E` está em `tag_block_rules` para um elemento de `U`
+2. **Capacidade:**
+   - tags de postura em `E.required_capability_tags` (`standing` \| `seated` \| `lying`) = **OR** (basta uma que a pessoa tenha)
+   - demais tags (ex. `low-impact`, `unilateral`) = **AND** (`⊆ C`)
+3. **Equipamento:** overlap com o inventário da pessoa; `resistance-band` / `dumbbells` só se a pessoa os tiver marcado.
 
-Em dúvida de tag, o conteúdo não é publicado. Conteúdo sem `required_capability_tags` não vai ao ar (falso seguro).
+Em dúvida de tag, o conteúdo não é publicado. Conteúdo publicado exige `required_capability_tags` não vazio (constraint + admin).
 
-Capacidades iniciais derivadas do onboarding:
-- mobilidade plena em pé: `em-pe`, `sentado`, `deitado` (deitado ainda pode ser bloqueado por gestação via contraindicação)
-- cadeira de rodas ou mobilidade reduzida permanente: `sentado` (não assume `em-pe` nem `deitado` sem pergunta extra)
+Capacidades iniciais derivadas do onboarding (`lib/onboarding/capabilities.ts`):
+- mobilidade plena: `standing`, `seated`, `lying`, `low-impact`
+- cadeira de rodas / mobilidade reduzida permanente: `seated` (+ `unilateral` quando couber); sem `standing`
 - “nenhuma lesão”: não adiciona contraindicação; capacidades seguem a mobilidade
 
 ### 3.5 Motor de refeições (exclusão + padrão alimentar)
 Um prato `P` só é oferecido se:
 1. **Exclusão:** `P.contains_tags ∩ pessoa.avoids_tags = vazio`
-2. **Padrão:** se a pessoa é `vegano`, `P.diet_compatible_tags` contém `vegano`. Se `vegetariano`, contém `vegetariano` ou `vegano`.
-3. Preferência (não bloqueia): `baixo-custo` primeiro na ordenação.
+2. **Padrão:** se a pessoa é `vegan`, `P.diet_compatible_tags` contém `vegan`. Se `vegetarian`, contém `vegetarian` ou `vegan`.
+3. Preferência (não bloqueia): `low-cost` primeiro na ordenação.
+4. Aversões textuais (`disliked_foods`): bloqueiam se o item aparecer sem `alt`.
 
-`contains_tags` descreve o que há no prato (gluten, lactose, ovo, amendoim, soja, carne, peixe). Não é “tag de alergia da pessoa”.
+`contains_tags` descreve o que há no prato (`gluten`, `lactose`, `egg`, `peanut`, `soy`, `meat`, `fish`). Não é “tag de alergia da pessoa”.
+
+Filtro de refeição por fase de ciclo: **fora do MVP**.
 
 ### 3.6 Hábitos comuns (todo perfil)
 - Lembrete de água: meta diária. Se houver peso consentido, sugerir 35 ml/kg e arredondar; senão sugerir 2 L. A pessoa pode ajustar.
 - Sono: registro simples de qualidade e/ou duração; lembrete opcional de horário de descanso. Sem diagnóstico. Conta para dias de cuidado.
 - Pausa ativa: a cada 90 minutos, sugerir 5 minutos de movimento filtrado pelo mesmo motor de exercício (nunca um movimento contraindicado).
-- Os três nascem disponíveis no onboarding de hábitos. Podem ser silenciados nas preferências, sem apagar o restante do perfil.
+- Descanso do dia (`rest-day`): “hoje não consigo” conta como presença no círculo, sem detalhe clínico.
+- Os hábitos nascem disponíveis no onboarding. Podem ser silenciados nas preferências, sem apagar o restante do perfil.
 
 ### 3.7 Cuidado coletivo (gamificação)
-- Dupla (`pair`) ou grupo (`circle`), convite por código.
-- Evento que pontua: treino concluído, água do dia atingida, pausa ativa cumprida, refeição do dia marcada. Nome do score: **dias de cuidado**, não calorias.
+- Dupla (`pair`) ou grupo (`group`), convite por código; no máximo um círculo ativo por pessoa.
+- Combinado semanal (3/5/7 dias de cuidado em companhia); progresso coletivo sem ranking.
+- Evento que pontua: treino, água, pausa, refeição, sono, descanso (`rest-day`). Nome do score: **dias de cuidado**, não calorias.
 - Proibido: comparar peso, foto de corpo, streak que humilhe quem falhou. Ausência de um dia não gera copy punitiva.
-- Membros do círculo veem só dado público + eventos de hábito, nunca tags clínicas.
+- Membros do círculo veem só dado público + eventos de hábito agregados, nunca tags clínicas.
 
 ### 3.8 Backoffice
 - Só `role = admin` acessa `/admin`.
@@ -186,7 +198,7 @@ Toda tag gravada em array de outra tabela **deve existir** neste catálogo. Educ
 - `phase_tags` text[] not null default `{}` (`menstrual-phase`, `follicular-phase`, `ovulation`, `luteal-phase`, `pregnancy-trimester-1` …)
 - `updated_at`
 
-Ausência de linha = módulo desligado. Tags de fase entram no conjunto `U` do motor de exercício e podem entrar em filtro brando de refeição (sem inventar milagre metabólico; Nutricionista define quais pratos têm `phase` tags).
+Ausência de linha = módulo desligado. Tags de fase entram no conjunto `U` do motor de exercício. Filtro de refeição por fase fica fora do MVP (Nutricionista pode acrescentar depois via `phase_tags` em `meals_library`).
 
 ### 5.8 `public.lgpd_consent_logs`
 - `id` bigint generated always as identity pk
@@ -240,7 +252,7 @@ Pausa ativa reutiliza esta tabela: exercícios com equipment simples e `intensit
 ### 5.12 Cuidado coletivo
 `care_circles`: `id`, `kind` (`pair` | `group`), `name`, `invite_code` unique, `created_by`.
 `care_circle_members`: `circle_id`, `user_id`, `joined_at`, unique (circle, user).
-`care_events`: `id`, `circle_id`, `user_id`, `day` date, `kind` (`workout` | `water` | `active-pause` | `meal`), unique (circle, user, day, kind).
+`care_events`: `id`, `circle_id`, `user_id`, `day` date, `kind` (`workout` | `water` | `active-pause` | `meal` | `sleep` | `rest-day`), unique (circle, user, day, kind).
 
 ## 6. Taxonomia inicial (slugs em inglês; `label` em pt-BR)
 
@@ -250,18 +262,18 @@ Movimento / intensidade: `active-pause`, `low-intensity`, `medium-intensity`, `h
 Equipamento: `bodyweight`, `wall`, `chair`, `bottle`, `towel`, `food-bag`.
 Alimento / contém: `gluten`, `lactose`, `egg`, `peanut`, `soy`, `meat`, `fish`.
 Alimento / dieta: `vegan`, `vegetarian`, `low-cost`.
-Ciclo / fase: `cycle-active`, `menstrual-phase`, `follicular-phase`, `ovulation`, `luteal-phase`.
+Ciclo / fase: `cycle-active`, `menstrual-phase`, `follicular-phase`, `ovulation`, `luteal-phase`, `pregnancy-trimester-1`, `pregnancy-trimester-2`, `pregnancy-trimester-3`, `postpartum`.
 
-Educador Físico e Nutricionista fecham o mapa condição → contraindicações na `/auditoria-motor` antes de popular a biblioteca.
+Educador Físico e Nutricionista mantêm o mapa condição → contraindicações; revalidar com `/auditoria-motor` a cada mudança de catálogo ou seed.
 
-Mapa mínimo de segurança (obrigatório no seed):
-- `torn-acl` bloqueia `high-impact`, `lower-body-plyometrics`
-- `chondromalacia` bloqueia `lower-body-plyometrics`, `high-impact`
-- `hernia` bloqueia `axial-load`
-- `hypertension` bloqueia `high-intensity`
+Mapa mínimo de segurança (obrigatório no seed + `tag_block_rules`):
+- `torn-acl` / `chondromalacia` bloqueiam `high-impact`, `lower-body-plyometrics`
+- `disc-herniation` (alias `hernia`) bloqueia carga/flexão axial conforme catálogo
+- `hypertension` bloqueia `high-intensity`, `inversion`
 - `labyrinthitis` bloqueia `spin`, `inversion`
-- `pregnancy-trimester-3` bloqueia `high-impact`, `prone-position`, `lower-body-plyometrics`
-- `wheelchair-user` / `reduced-mobility`: capacidades só `seated` (+ `unilateral` se couber); exercícios com `standing` não passam na trava 2
+- `pregnancy-trimester-1` e `postpartum` bloqueiam `high-impact`, `lower-body-plyometrics` (pós também `high-intra-abdominal-pressure`)
+- `pregnancy-trimester-2/3` bloqueiam prono + impacto/pliometria; T3 também `high-intensity` e `inversion`
+- PCD sem `standing`: exercícios só com postura `standing` exigida (sem `seated`/`lying` como alternativa) não passam; dual-postura usa OR
 
 ## 7. Contratos de consulta (Server Actions / Server Components)
 
@@ -269,22 +281,15 @@ Leitura autenticada, nunca service role no cliente. Erro para a pessoa: genéric
 
 ### 7.1 Exercícios seguros
 Entrada: `auth.uid()`.
-Ler `condition_tags + phase_tags` (união `U`) e `capability_tags` (`C`).
-Query (ideia):
+Função canônica: `public.list_safe_exercises()` (consentimento, `U`, capacidades com postura OR, equipamento specialty, `tag_block_rules`).
 
-```sql
-select e.*
-from public.exercises_library as e
-where e.is_published = true
-  and not (e.contraindication_tags && $u)
-  and e.required_capability_tags <@ $c
-order by e.title;
-```
-
-`$u` e `$c` vêm das tabelas sensíveis da própria pessoa, em Server Component/Action. Não enviar o vetor clínico para o cliente para “filtrar no React”.
+Superfícies do app (Hoje, Rotina, pausa, plano, mark-done) **só** consomem essa RPC (ou equivalente que a espelhe). Não filtrar biblioteca completa no React.
 
 ### 7.2 Refeições seguras
+Função canônica: `public.list_safe_meals()` (consentimento, `contains` × `avoids`, `diet_pattern`, aversões sem `alt`, ordenação `low-cost`).
+
 ```sql
+-- Ideia resumida; a implementação vive na migration + RPC.
 select m.*
 from public.meals_library as m
 where m.is_published = true
@@ -365,15 +370,19 @@ Não misturar várias perguntas clínicas na mesma tela.
 
 ## 11. Ordem de implementação
 
-1. Educador Físico + Nutricionista: fechar mapa de tags (este doc já traz o mínimo).
-2. Especialista LGPD + UX Writer: textos de consentimento do passo 0.
-3. Arquiteto/Backend: migração, RLS, `is_admin()`, trigger de perfil, catálogo `tags`.
-4. DevOps: projeto Supabase, bucket, env, não commitar secrets.
-5. Backend: actions de onboarding e queries 7.1 e 7.2.
-6. Designer UX + Frontend: onboarding e home com listas já filtradas no servidor.
-7. Backend + Frontend: backoffice mínimo de biblioteca.
-8. Cuidado coletivo (depois que o motor individual estiver testado).
-9. QA + `/auditoria-motor` + `/revisao-clinica-lgpd`.
+**Histórico do MVP (concluído).** A ordem abaixo foi a sequência usada; não é fila aberta.
+
+1. Educador Físico + Nutricionista: mapa de tags.
+2. Especialista LGPD + UX Writer: consentimento.
+3. Arquiteto/Backend: migração, RLS, motor, catálogo `tags`.
+4. DevOps: Supabase, bucket, env.
+5. Backend: onboarding e `list_safe_*`.
+6. Frontend: onboarding, Hoje, Mover, Comer.
+7. Backoffice de biblioteca.
+8. Cuidado coletivo (dupla → grupo → combinado/rest-day).
+9. QA + `/auditoria-motor` + `/revisao-clinica-lgpd` + endurecimento.
+
+Trabalho novo: tratar como pós-MVP no roadmap, salvo hotfix de segurança clínica ou LGPD.
 
 ## 12. Riscos
 - Falso seguro por exercício sem `required_capability_tags`.

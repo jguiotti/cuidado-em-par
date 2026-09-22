@@ -37,8 +37,15 @@ export interface BlockRule {
 /**
  * Gestation / postpartum phase blocks (phase_tags on user_cycle_profiles).
  * Kept outside CLINICAL_CONDITIONS because they are cycle phases, not injuries.
+ * T1 and postpartum are explicit (never silent): impact/plyo always blocked;
+ * postpartum also blocks high intra-abdominal pressure (diastasis caution).
  */
 export const CYCLE_PHASE_BLOCK_RULES: BlockRule[] = [
+  { conditionSlug: "pregnancy-trimester-1", blockedContentTag: "high-impact" },
+  {
+    conditionSlug: "pregnancy-trimester-1",
+    blockedContentTag: "lower-body-plyometrics",
+  },
   { conditionSlug: "pregnancy-trimester-2", blockedContentTag: "prone-position" },
   { conditionSlug: "pregnancy-trimester-2", blockedContentTag: "high-impact" },
   {
@@ -53,7 +60,55 @@ export const CYCLE_PHASE_BLOCK_RULES: BlockRule[] = [
   },
   { conditionSlug: "pregnancy-trimester-3", blockedContentTag: "high-intensity" },
   { conditionSlug: "pregnancy-trimester-3", blockedContentTag: "inversion" },
+  { conditionSlug: "postpartum", blockedContentTag: "high-impact" },
+  { conditionSlug: "postpartum", blockedContentTag: "lower-body-plyometrics" },
+  {
+    conditionSlug: "postpartum",
+    blockedContentTag: "high-intra-abdominal-pressure",
+  },
 ];
+
+/** Posture capabilities: exercise may list standing|seated|lying as alternatives (OR). */
+export const POSTURE_CAPABILITY_TAGS = [
+  "standing",
+  "seated",
+  "lying",
+] as const;
+
+/**
+ * Capabilities check mirroring list_safe_exercises:
+ * - standing / seated / lying on the exercise = OR (any match)
+ * - other required tags (low-impact, unilateral, …) = AND
+ */
+export function profileMeetsRequiredCapabilities(
+  requiredCapabilityTags: readonly string[],
+  availableCapabilityTags: readonly string[],
+): boolean {
+  const available = new Set(availableCapabilityTags);
+  const postureSet = new Set<string>(POSTURE_CAPABILITY_TAGS);
+  const requiredPostures: string[] = [];
+  const requiredOther: string[] = [];
+
+  for (const tag of requiredCapabilityTags) {
+    if (postureSet.has(tag)) {
+      requiredPostures.push(tag);
+    } else {
+      requiredOther.push(tag);
+    }
+  }
+
+  for (const tag of requiredOther) {
+    if (!available.has(tag)) {
+      return false;
+    }
+  }
+
+  if (requiredPostures.length === 0) {
+    return true;
+  }
+
+  return requiredPostures.some((tag) => available.has(tag));
+}
 
 /** All (condition/phase → blocked intensity) pairs for tag_block_rules. */
 export function clinicalBlockRules(): BlockRule[] {
@@ -184,10 +239,13 @@ export function isExerciseSafeForProfile(
     }
   }
 
-  for (const required of exercise.requiredCapabilityTags) {
-    if (!profile.capabilityTags.includes(required)) {
-      return false;
-    }
+  if (
+    !profileMeetsRequiredCapabilities(
+      exercise.requiredCapabilityTags,
+      profile.capabilityTags,
+    )
+  ) {
+    return false;
   }
 
   for (const intensity of exercise.intensityTags) {

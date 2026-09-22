@@ -36,7 +36,7 @@ export function AppBottomNav() {
             <li key={href} className="flex-1">
               <Link
                 href={href}
-                className={`focus-ring flex min-h-14 flex-col items-center justify-center gap-1 rounded-[var(--radius-soft)] px-1 text-[0.7rem] font-semibold transition ${
+                className={`focus-ring flex min-h-14 flex-col items-center justify-center gap-1 rounded-[var(--radius-soft)] px-1 text-xs font-semibold transition ${
                   isActive ? "text-mint-deep" : "text-ink-soft"
                 }`}
                 aria-current={isActive ? "page" : undefined}

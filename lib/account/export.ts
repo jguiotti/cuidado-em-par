@@ -17,6 +17,8 @@ export interface AccountExportPayload {
   habit_prefs: Record<string, unknown> | null;
   habit_logs: Array<Record<string, unknown>>;
   care_nudges: Array<Record<string, unknown>>;
+  care_circle_membership: Record<string, unknown> | null;
+  care_events: Array<Record<string, unknown>>;
 }
 
 export function buildExportFilename(exportedAt: Date = new Date()): string {

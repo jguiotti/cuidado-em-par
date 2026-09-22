@@ -134,7 +134,8 @@ for (const exercise of enriched) {
   lines.push("");
 }
 
-// Harden motor: normalize hernia ↔ disc-herniation in the profile union.
+// Harden motor: normalize hernia ↔ disc-herniation + equipment specialty filter.
+// Keep in sync with 20260922150000_fix_equipment_specialty_filter.sql
 lines.push(`create or replace function public.list_safe_exercises()`);
 lines.push(`returns setof public.exercises_library`);
 lines.push(`language plpgsql`);
@@ -145,6 +146,7 @@ lines.push(`as $$`);
 lines.push(`declare`);
 lines.push(`  v_conditions text[] := '{}';`);
 lines.push(`  v_capabilities text[] := '{}';`);
+lines.push(`  v_equipment text[] := array['bodyweight']::text[];`);
 lines.push(`  v_phases text[] := '{}';`);
 lines.push(`  v_union text[] := '{}';`);
 lines.push(`begin`);
@@ -154,13 +156,20 @@ lines.push(`  end if;`);
 lines.push(``);
 lines.push(`  select`);
 lines.push(`    coalesce(clinical.condition_tags, '{}'),`);
-lines.push(`    coalesce(clinical.capability_tags, '{}')`);
-lines.push(`  into v_conditions, v_capabilities`);
+lines.push(`    coalesce(clinical.capability_tags, '{}'),`);
+lines.push(
+  `    coalesce(clinical.available_equipment_tags, array['bodyweight']::text[])`,
+);
+lines.push(`  into v_conditions, v_capabilities, v_equipment`);
 lines.push(`  from public.user_clinical_conditions as clinical`);
 lines.push(`  where clinical.user_id = (select auth.uid());`);
 lines.push(``);
 lines.push(`  if not found then`);
 lines.push(`    return;`);
+lines.push(`  end if;`);
+lines.push(``);
+lines.push(`  if not ('bodyweight' = any (v_equipment)) then`);
+lines.push(`    v_equipment := array_append(v_equipment, 'bodyweight');`);
 lines.push(`  end if;`);
 lines.push(``);
 lines.push(`  select coalesce(cycle.phase_tags, '{}')`);
@@ -187,7 +196,41 @@ lines.push(`  select exercise.*`);
 lines.push(`  from public.exercises_library as exercise`);
 lines.push(`  where exercise.is_published = true`);
 lines.push(`    and not (exercise.contraindication_tags && v_union)`);
-lines.push(`    and exercise.required_capability_tags <@ v_capabilities`);
+lines.push(`    -- posture tags (standing|seated|lying) are OR; other capabilities are AND`);
+lines.push(`    and (`);
+lines.push(`      coalesce((`);
+lines.push(`        select array_agg(tag order by tag)`);
+lines.push(`        from unnest(exercise.required_capability_tags) as tag`);
+lines.push(`        where tag not in ('standing', 'seated', 'lying')`);
+lines.push(`      ), '{}'::text[]) <@ v_capabilities`);
+lines.push(`      and (`);
+lines.push(`        not exists (`);
+lines.push(`          select 1`);
+lines.push(`          from unnest(exercise.required_capability_tags) as tag`);
+lines.push(`          where tag in ('standing', 'seated', 'lying')`);
+lines.push(`        )`);
+lines.push(`        or exists (`);
+lines.push(`          select 1`);
+lines.push(`          from unnest(exercise.required_capability_tags) as tag`);
+lines.push(`          where tag in ('standing', 'seated', 'lying')`);
+lines.push(`            and tag = any (v_capabilities)`);
+lines.push(`        )`);
+lines.push(`      )`);
+lines.push(`    )`);
+lines.push(`    and (`);
+lines.push(`      coalesce(cardinality(exercise.equipment_tags), 0) = 0`);
+lines.push(`      or (`);
+lines.push(`        not (`);
+lines.push(`          'resistance-band' = any (exercise.equipment_tags)`);
+lines.push(`          and not ('resistance-band' = any (v_equipment))`);
+lines.push(`        )`);
+lines.push(`        and not (`);
+lines.push(`          'dumbbells' = any (exercise.equipment_tags)`);
+lines.push(`          and not ('dumbbells' = any (v_equipment))`);
+lines.push(`        )`);
+lines.push(`        and exercise.equipment_tags && v_equipment`);
+lines.push(`      )`);
+lines.push(`    )`);
 lines.push(`    and not exists (`);
 lines.push(`      select 1`);
 lines.push(`      from public.tag_block_rules as block_rule`);
@@ -200,7 +243,7 @@ lines.push(`$$;`);
 lines.push(``);
 lines.push(`comment on function public.list_safe_exercises() is`);
 lines.push(
-  `  'Motor de treino no banco. Bloqueia por contraindication_tags, capabilities e tag_block_rules. Normaliza hernia/disc-herniation.';`,
+  `  'Motor de treino. Bloqueia contraindicações, capabilities (postura OR), specialty equipment e tag_block_rules. Normaliza hernia/disc-herniation.';`,
 );
 lines.push("");
 lines.push(`revoke all on function public.list_safe_exercises() from public;`);
@@ -209,7 +252,7 @@ lines.push(`grant execute on function public.list_safe_exercises() to authentica
 lines.push("");
 
 const outPath = resolve(
-  "supabase/migrations/20260921210000_sync_exercise_clinical_safety.sql",
+  "supabase/migrations/20260922180000_cycle_t1_postpartum_and_posture_capability_or.sql",
 );
 writeFileSync(outPath, `${lines.join("\n")}\n`, "utf8");
 console.log(

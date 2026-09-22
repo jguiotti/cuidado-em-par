@@ -107,10 +107,88 @@ check(
   pregnancySafe.every((e) => !e.intensityTags.includes("high-impact")),
 );
 
+check(
+  "tag_block_rules cover pregnancy-t1 high-impact",
+  rules.some(
+    (r) =>
+      r.conditionSlug === "pregnancy-trimester-1" &&
+      r.blockedContentTag === "high-impact",
+  ),
+);
+check(
+  "tag_block_rules cover postpartum plyometrics",
+  rules.some(
+    (r) =>
+      r.conditionSlug === "postpartum" &&
+      r.blockedContentTag === "lower-body-plyometrics",
+  ),
+);
+
+const pregnancyT1Safe = published.filter((e) =>
+  isExerciseSafeForProfile(e, {
+    conditionTags: [],
+    capabilityTags: fullCaps,
+    phaseTags: ["pregnancy-trimester-1"],
+  }),
+);
+check(
+  "pregnancy-t1 safe set has no high-impact",
+  pregnancyT1Safe.every((e) => !e.intensityTags.includes("high-impact")),
+);
+
+const postpartumSafe = published.filter((e) =>
+  isExerciseSafeForProfile(e, {
+    conditionTags: [],
+    capabilityTags: fullCaps,
+    phaseTags: ["postpartum"],
+  }),
+);
+check(
+  "postpartum safe set has no high-impact",
+  postpartumSafe.every((e) => !e.intensityTags.includes("high-impact")),
+);
+
+const seatedOnlyCaps = ["seated", "low-impact", "unilateral"];
+const seatedEquipment = [
+  "bodyweight",
+  "chair",
+  "towel",
+  "bottle",
+  "wall",
+  "resistance-band",
+  "dumbbells",
+  "broomstick",
+  "backpack",
+  "cushion",
+  "food-bag",
+];
+const dualPosture = published.filter(
+  (e) =>
+    e.requiredCapabilityTags.includes("standing") &&
+    e.requiredCapabilityTags.includes("seated"),
+);
+const dualVisibleSeated = dualPosture.filter((e) =>
+  isExerciseSafeForProfile(e, {
+    conditionTags: [],
+    capabilityTags: seatedOnlyCaps,
+    availableEquipmentTags: seatedEquipment,
+  }),
+);
+check(
+  "standing+seated exercises visible to seated-only profile (posture OR)",
+  dualPosture.length === 0 || dualVisibleSeated.length === dualPosture.length,
+);
+
 // Coverage summary for Educador review
 console.log("");
 console.log(`INFO published=${published.length} block_rules=${rules.length}`);
 console.log(`INFO torn-acl safe=${tornAclSafe.length} pregnancy-t3 safe=${pregnancySafe.length}`);
+console.log(
+  `INFO pregnancy-t1 safe=${pregnancyT1Safe.length} postpartum safe=${postpartumSafe.length}`,
+);
+console.log(
+  `INFO dual-posture seated-visible=${dualVisibleSeated.length}/${dualPosture.length}`,
+);
 
 const sample = published.slice(0, 5);
 for (const exercise of sample) {

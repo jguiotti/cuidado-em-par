@@ -1,105 +1,76 @@
-# Roadmap de sprints, ideias pós-MVP e preparação React Native
+# Roadmap — pós-MVP e preparação React Native
 
-Status: vivo — consultar depois do lançamento do MVP e a cada planejamento de ciclo.
-Última atualização: 2026-09-21.
-
-## Mudanças em relação ao recorte inicial
-- **Sono entra no MVP** (pilar de consistência/prevenção), junto com água e pausa ativa.
-- **Componentização máxima no frontend** desde já, para reaproveitar domínio e UI primitives em um app React Native após validação do MVP.
-- Ideias de produto/UX aprovadas pela squad ficam neste arquivo para não se perderem.
+**MVP:** finalizado em 2026-09-22 — ver `docs/mvp-finalizado.md`.  
+**Status deste arquivo:** vivo para ideias e ciclos **após** o MVP.  
+Última atualização: 2026-09-22.
 
 ---
 
-## Princípios de experiência (MVP e além)
+## Princípios de experiência (mantidos)
 
 1. Uma decisão por tela; mobile-first; navegação com o polegar.
 2. Santuário Digital: Verde Menta, Warm Blush, tonal layering, zero borda dura, zero ranking corporal.
 3. Segurança invisível: conteúdo inseguro não aparece (motor de tags no servidor).
-4. Gamificação só de **dias de cuidado** (água, sono, pausa, treino, refeição).
-5. Sono: hábito de prevenção, sem diagnóstico de distúrbio; linguagem sem culpa (“como foi o descanso?”).
+4. Gamificação só de **dias de cuidado** (água, sono, pausa, treino, refeição, descanso).
+5. Sono: hábito de prevenção, sem diagnóstico; linguagem sem culpa.
 
-### Navegação do app (MVP)
-| Aba | Função |
-|---|---|
-| Hoje | Ritual do dia: água, sono, pausa, treino, refeição |
-| Mover | Exercícios filtrados |
-| Comer | Refeições filtradas |
-| Juntas | Dupla/grupo |
-| Conta | Perfil, consentimentos, exclusão |
+### Navegação do app (entregue no MVP)
+
+| Aba / área | Função |
+| --- | --- |
+| Início | Ritual do dia: água, sono, pausa, plano, descanso |
+| Rotina | Exercícios filtrados pelo motor |
+| Comer | Refeições filtradas pelo motor |
+| Círculo | Dupla/grupo, combinado, progresso em companhia |
+| Progresso | Consistência sem ranking corporal |
+| Conta (via top bar) | Perfil, saúde editável, LGPD, senha, PWA |
 
 Backoffice: mundo separado (`/admin`), sem dado de saúde de quem usa o app.
 
 ---
 
-## Sprints do MVP
+## Sprints do MVP (histórico — todas fechadas)
 
-### Sprint 0 — Fundação (quase concluída)
-Auth, rotas, tokens, proxy, schema, tags em inglês.
+| Sprint | Tema | Status |
+| --- | --- | --- |
+| 0 | Fundação | fechada |
+| 1 | Consentimento + onboarding base | fechada — `docs/features/sprint-01-onboarding-consent.md` |
+| 2 | Clínico, nutrição, ciclo, hábitos | fechada — `docs/features/sprint-02-clinical-nutrition-cycle-habits.md` |
+| 3 | Backoffice exercícios | fechada — `docs/features/sprint-03-admin-exercises.md` |
+| 4 | Refeições + UI segura | fechada — `docs/features/sprint-04-meals-and-safe-ui.md` |
+| 5 | Hoje + hábitos | fechada — `docs/features/sprint-05-today-habits.md` |
+| 6 | Conta, LGPD, PWA | fechada — `docs/features/sprint-06-account-lgpd-pwa.md` |
+| 7 | Círculo (dupla) | fechada — `docs/features/sprint-07-care-circle-pair.md` |
+| 8 | Grupo + endurecimento | fechada — `docs/features/sprint-08-group-launch-hardening.md` |
+| 9 | Plano do dia + progresso | fechada (código em home/progress/daily-plan) |
+| 10 | Combinado, rest-day, nudge | fechada — `docs/features/sprint-10-circle-care-together.md` |
 
-### Sprint 1 — Consentimento + onboarding (passos 0–2)
-Ver `docs/features/sprint-01-onboarding-consent.md`.
-Termos, personalização de saúde, apelido, gênero opcional, foco, peso opcional.
-
-### Sprint 2 — Onboarding clínico, alimentar, ciclo opt-in + hábitos base
-**Status: fechada (2026-09-21).**  
-Ver `docs/features/sprint-02-clinical-nutrition-cycle-habits.md` e `docs/features/sprint-02-qa-checklist.md`.  
-Sexo atribuído ao nascer (lista fechada, sensível), condições (busca 0–N), mobilidade, nutrição (padrão + restrições 0–N), ciclo/gestação opt-in, preferências de água/sono/pausa.
-
-### Sprint 3 — Backoffice de exercícios
-**Status: fechado (QA aprovado)** — ver `docs/features/sprint-03-admin-exercises.md` e `docs/features/sprint-03-qa-checklist.md`.  
-CRUD, tags, upload, biblioteca completa (~146) com ilustrações, seed + motor.
-
-### Sprint 4 — Backoffice de refeições + motor na UI
-**Status: fechado (QA aprovado)** — ver `docs/features/sprint-04-meals-and-safe-ui.md` e `docs/features/sprint-04-qa-checklist.md`.  
-CRUD refeições; biblioteca completa (~99) com fotos; Mover/Comer via `list_safe_*`; marcar feito.
-
-### Sprint 5 — Hoje + hábitos (água, sono, pausa)
-**Status: fechado (QA aprovado)** — ver `docs/features/sprint-05-today-habits.md` e `docs/features/sprint-05-qa-checklist.md`.  
-Home do dia; registrar água e sono; pausa ativa; lembretes locais com opt-in.
-
-### Sprint 6 — Conta, LGPD prática, PWA instalável
-**Status: fechado (QA aprovado)** — ver `docs/features/sprint-06-account-lgpd-pwa.md` e `docs/features/sprint-06-qa-checklist.md`.  
-Revogar, exportar, excluir; texto do motor; manifest; cache só da casca.
-
-### Sprint 7 — Cuidado coletivo (dupla primeiro)
-**Status: fechado (QA aprovado)** — ver `docs/features/sprint-07-care-circle-pair.md` e `docs/features/sprint-07-qa-checklist.md`.  
-Convite por código; dias de cuidado compartilhados; sem vazamento clínico.
-
-### Sprint 8 — Grupo + endurecimento + conteúdo de lançamento
-**Status: fechada (2026-09-21)** — ver `docs/features/sprint-08-group-launch-hardening.md` e `docs/features/sprint-08-qa-checklist.md`.  
-Grupo (até 8); auditorias motor/clínica/LGPD/UX/QA; biblioteca mínima verificável. **Última sprint do MVP — MVP pronto para lançamento** (validar joins 8/9 e perfis L1–L6 em staging).
+Auth por senha: `docs/features/auth-password-mvp.md` (parte do MVP).
 
 ---
 
-## Sono no MVP (definição curta)
+## Sono (já no MVP)
 
-**Entra**
-- Preferência: lembrete de sono ligado/desligado; meta simples de horário de deitar (opcional).
-- Registro do dia: qualidade subjetiva (`poor` | `ok` | `good`) e/ou duração em minutos — enums em inglês, labels em pt-BR.
-- Conta como `habit_kind` / `care_events.kind`: `sleep`.
-- Aparece em **Hoje** e no círculo só como “descansou” (sem nota clínica).
-
-**Não entra no MVP**
-- Polissonografia, diagnóstico de apneia, wearables obrigatórios, score médico de sono.
-- Correlação automática agressiva treino×sono sem regra explícita de Educador (pode ser pós-MVP suave).
-
-Migração futura: estender `habit_logs.kind` e `care_events.kind` com `sleep`; campos em `user_habit_prefs` (`sleep_reminder_enabled`, `sleep_target_bedtime` opcional).
+Registro subjetivo (`poor` \| `ok` \| `good`), lembrete opcional, kind `sleep` no hábito/círculo só como “descansou”.  
+Fora: diagnóstico, wearables obrigatórios, score médico.
 
 ---
 
-## Ideias aprovadas — consultar pós-MVP
+## Ideias aprovadas — pós-MVP
+
+Priorizar com PM a cada ciclo. Nada abaixo reabre o MVP automaticamente.
 
 ### Experiência e hábito
-- Modo “5 minutos” (só água + pausa + sono leve conta).
+- Modo “5 minutos” (só água + pausa + sono leve).
 - Reabertura gentil após dias sem abrir o app.
 - Preferência de horário para lembretes (manhã/tarde/noite).
 - Trilha pós-gestação com conteúdo dedicado.
+- Check-in de energia opcional (privado; não no feed clínico).
 
 ### Inclusão e segurança
 - Revisão periódica do perfil (“algo mudou no seu corpo?”).
-- Estado “hoje não consigo” (reduz intensidade sem apagar histórico).
-- Conteúdo sentado/unilateral como primeira classe no backoffice.
 - Botão “isso pareceu inseguro” → fila interna.
+- Filtro brando de refeição por `phase_tags` (Nutricionista).
 
 ### Alimentação
 - Lista de mercado da semana com substituições baratas.
@@ -107,23 +78,22 @@ Migração futura: estender `habit_logs.kind` e `care_events.kind` com `sleep`; 
 - Porção para 1 pessoa como padrão.
 
 ### Cuidado coletivo
-- Dupla como aquisição padrão antes de grupo grande.
-- **Sprint 10 (planejado):** combinados do círculo (3/5/7 dias de cuidado/semana), progresso em companhia, toque de carinho e **“hoje não consigo”** (`rest-day`) — ver `docs/features/sprint-10-circle-care-together.md`.
-- Check-in de energia opcional além do `rest-day` (privado; não no feed clínico) — pós S10.
+- Dupla como aquisição padrão antes de grupo grande (já possível; refinar onboarding).
+- Celebrations leves de combinado (sem ranking).
 
 ### Santuário / PWA
 - Onboarding de instalação com benefício claro.
 - Tema de contraste alto opcional.
-- Offline limitado de hábitos.
+- Offline limitado de hábitos (sem cache de saúde).
 
 ### Operação
 - Checklist de publicação clínica no backoffice.
 - Fluxo rascunho → revisão Educador/Nutri → publicado.
-- Biblioteca mínima de lançamento documentada (ex.: 30 exercícios + 20 refeições cobrindo PCD, gestação, celíaco, vegano).
+- Hardening RLS da biblioteca (leitura só via RPC), se produto exigir.
 
 ### Confiança
-- Explicar o motor em linguagem humana na Conta.
-- Central de privacidade completa.
+- Central de privacidade expandida.
+- Explicação do motor ainda mais curta na Conta (já há bloco base).
 
 ### Fora de escopo permanente (salvo mudança explícita de produto)
 IA generativa para treino/dieta/diagnóstico; IMC como meta; foto de corpo; ranking de shape; admin lendo clínica de quem usa o app; suplemento caro como default.
@@ -132,22 +102,16 @@ IA generativa para treino/dieta/diagnóstico; IMC como meta; foto de corpo; rank
 
 ## Componentização e futuro React Native
 
-Objetivo: depois do MVP validado, um app React Native reaproveita o máximo possível.
+Objetivo: após validação do MVP em produção, reaproveitar domínio e UI.
 
-### O que componentizar desde já (Web)
-1. **Design system / primitives** em `components/ui/`: `Button`, `TextField`, `ChoiceCard`, `ProgressSteps`, `Surface`, `InlineAlert`, `BottomNav` — sem lógica de negócio, só props.
-2. **Blocos de produto** em `components/` por domínio: `auth/`, `onboarding/`, `habits/`, `workouts/`, `meals/`, `circle/`, `account/`, `admin/`.
-3. **Domínio puro** em `lib/`: tags, validação de consentimento, mapeamento de labels, regras de hábito — **sem** imports de `next/` ou `react-dom`.
-4. **Server Actions / data** ficam em `app/actions/` (web); no RN serão hooks + API/Supabase client.
-5. **Copy** centralizada (constantes ou dicionário pt-BR) para a mesma voz nas duas plataformas.
-
-### Regras para quem implementa
-- Preferir composição a telas monólito.
-- Nada de estilo acoplado a uma única página se o padrão se repete.
-- Evitar APIs só-web dentro de componentes reutilizáveis (ex.: `window` só em adapters).
-- Tokens CSS espelháveis depois em theme RN (cores e raios com os mesmos nomes semânticos).
+### O que já está alinhado
+1. **Primitives** em `components/ui/`.
+2. **Blocos** por domínio em `components/`.
+3. **Domínio puro** em `lib/` (tags, hábitos, ciclo, segurança) — preferir sem `next/`.
+4. **Server Actions** em `app/actions/` (web); no RN → hooks + Supabase client.
+5. **Copy** em `lib/i18n/*-pt-br.ts`.
 
 ### O que NÃO se compartilha 1:1
-Layouts App Router, `proxy.ts`, Server Components, PWA service worker. A lógica e os primitives sim.
+Layouts App Router, `proxy.ts`, Server Components, service worker da PWA.
 
-Ver também `.cursor/rules/08-desenvolvedor-frontend.mdc` e `13-coding-standards.mdc`.
+Ver `.cursor/rules/08-desenvolvedor-frontend.mdc` e `13-coding-standards.mdc`.

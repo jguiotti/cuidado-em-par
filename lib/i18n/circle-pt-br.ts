@@ -5,7 +5,7 @@ export const circleCopy = {
     "Quem está no círculo vê se você registrou água, descanso, pausa, movimento, refeição ou “hoje não consigo”, e se enviou um carinho — sem detalhes de saúde.",
   emptyTitle: "Cuidar em companhia",
   emptySupport:
-    "Crie uma dupla ou um grupo, ou entre com um código. Juntas, o app acompanha a constância — sem comparar corpo.",
+    "Crie uma dupla ou um grupo, ou entre com um código. Em companhia, o app acompanha a constância — sem comparar corpo.",
   emptyValue:
     "Vocês combinam quantos dias de cuidado querem na semana. Descanso também conta.",
   createPair: "Criar dupla",

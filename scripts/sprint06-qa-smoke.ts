@@ -43,6 +43,8 @@ const payload: AccountExportPayload = {
   habit_prefs: null,
   habit_logs: [],
   care_nudges: [],
+  care_circle_membership: null,
+  care_events: [],
 };
 
 assert("export owns user A", assertExportOwnsUser(payload, "user-a"));
@@ -67,6 +69,8 @@ const requiredKeys = [
   "habit_prefs",
   "habit_logs",
   "care_nudges",
+  "care_circle_membership",
+  "care_events",
 ];
 assert(
   "export payload keys",

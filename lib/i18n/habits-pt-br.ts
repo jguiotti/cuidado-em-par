@@ -34,6 +34,8 @@ export const habitsCopy = {
       `${n} de ${goal} dias de cuidado em companhia nesta semana.`,
     circleNudge: (name: string) => `${name} enviou um carinho hoje.`,
     circleOpen: "Abrir círculo",
+    openProgress: "Ver progresso",
+    moreLinksLabel: "Atalhos",
     openMove: "Começar prática",
     openEat: "Ver refeição",
     moveChip: "Movimento seguro",

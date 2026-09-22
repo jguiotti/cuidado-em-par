@@ -15,7 +15,7 @@ interface CycleRemindersBannerProps {
   remindLateOrPossiblePregnancy: boolean;
 }
 
-function notifyOnce(tag: string, title: string, body: string) {
+function notifyOnce(tag: string, title: string, _detailedBody: string) {
   if (typeof window === "undefined" || !("Notification" in window)) {
     return;
   }
@@ -33,16 +33,19 @@ function notifyOnce(tag: string, title: string, body: string) {
     // ignore storage failures
   }
 
+  // Lock-screen body stays generic (LGPD). Detail stays in the in-app banner.
+  const lockScreenBody = accountCopy.cycleAlerts.lockScreenBody;
+
   if (navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage({
       type: "SHOW_HABIT_REMINDER",
       title,
-      body,
+      body: lockScreenBody,
       tag,
     });
     return;
   }
-  void new Notification(title, { body, tag });
+  void new Notification(title, { body: lockScreenBody, tag });
 }
 
 export function CycleRemindersBanner({

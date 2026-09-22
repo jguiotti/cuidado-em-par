@@ -44,4 +44,4 @@ npx tsc --noEmit
 
 ## MVP
 
-Com Sprint 8 fechada: **MVP pronto para lançamento**, com ressalva de validação manual G2–G3 e L1–L6 em staging.
+Com Sprint 8 fechada e sprints 9–10 + endurecimento do motor (2026-09-22): **MVP finalizado**. Ver `docs/mvp-finalizado.md`. Smoke G2–G3 e L1–L6 em staging continuam recomendados antes de anúncio público.

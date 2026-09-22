@@ -1,6 +1,8 @@
 # Auth MVP — e-mail + senha
 
-Fluxo principal: **e-mail + senha**. Magic link não é mais o caminho feliz.
+**Status:** entregue no MVP finalizado (2026-09-22).
+
+Fluxo principal: **e-mail + senha**. Magic link não é o caminho feliz (legado apenas).
 
 ## Configuração no Supabase Dashboard
 

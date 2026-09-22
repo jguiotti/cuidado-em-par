@@ -212,19 +212,22 @@ export async function getOrCreateTodayPlanAction(): Promise<
         meals: meals.map((item) => ({ id: item.id, mealSlot: item.mealSlot })),
       });
 
-      const { error: insertError } = await supabase
+      const { error: upsertError } = await supabase
         .from("user_daily_plans")
-        .insert({
-          user_id: user.id,
-          day,
-          exercise_ids: exerciseIds,
-          meals: mealsMap,
-          is_rest_day: isRestDay,
-          cardio_suggestion: cardioSuggestion,
-        });
+        .upsert(
+          {
+            user_id: user.id,
+            day,
+            exercise_ids: exerciseIds,
+            meals: mealsMap,
+            is_rest_day: isRestDay,
+            cardio_suggestion: cardioSuggestion,
+          },
+          { onConflict: "user_id,day" },
+        );
 
-      if (insertError) {
-        console.error("getOrCreateTodayPlanAction insert", insertError.message);
+      if (upsertError) {
+        console.error("getOrCreateTodayPlanAction upsert", upsertError.message);
         return { ok: false, code: "save_failed" };
       }
     } else {

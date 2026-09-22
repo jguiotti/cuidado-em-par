@@ -75,9 +75,9 @@ export const loginCopy = {
   resetSessionExpired:
     "Este link expirou ou já foi usado. Peça uma nova redefinição na tela de entrar.",
   rateLimitError:
-    "Muitos e-mails em pouco tempo. Aguarde cerca de um minuto e tente de novo — é um limite do provedor de acesso.",
+    "Muitos e-mails em pouco tempo. Aguarde cerca de um minuto e tente de novo.",
   recoverServerError:
-    "O provedor não conseguiu enviar o e-mail de redefinição (erro interno). Cause comuns: template HTML, SMTP ou cota diária. Defina a senha sem e-mail: node scripts/set-user-password.cjs seu@email.com \"SenhaNova8\".",
+    "Não foi possível enviar o e-mail de redefinição agora. Aguarde um pouco e tente de novo.",
   back: "Voltar ao início",
   authError: "Não foi possível concluir o acesso. Confira e-mail e senha.",
   privacyFooter:
@@ -85,15 +85,15 @@ export const loginCopy = {
   sendError:
     "Não foi possível concluir agora. Confira e-mail e senha e tente de novo.",
   invalidCredentials:
-    "E-mail ou senha incorretos. Se a senha foi definida no painel do Supabase, confira se o usuário está com e-mail Confirmado e use o mesmo e-mail da conta. Ou use Esqueci a senha.",
+    "E-mail ou senha incorretos. Se ainda não tem senha, use Esqueci a senha.",
   emailTaken:
     "Este e-mail já tem conta. Use Entrar com a senha cadastrada.",
   signUpConfirmEmail:
     "Conta criada. Abra o e-mail de confirmação para ativar o acesso — o link leva de volta ao app.",
   emailNotConfirmedSignIn:
-    "Este e-mail ainda não foi confirmado. No Supabase: Authentication → Users → abra seu usuário → marque Confirm email (ou Confirmado) e salve. Depois tente entrar de novo.",
+    "Este e-mail ainda não foi confirmado. Abra o link que enviamos ou peça um novo e-mail de confirmação.",
   passwordTooShort: "A senha precisa ter pelo menos 8 caracteres.",
   passwordMismatch: "As senhas não coincidem. Digite de novo.",
   envError:
-    "Falta configurar o arquivo .env com a URL e a chave anon do Supabase. Depois reinicie o npm run dev.",
+    "O acesso está temporariamente indisponível. Tente de novo em instantes.",
 } as const;

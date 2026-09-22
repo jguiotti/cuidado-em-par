@@ -1,7 +1,8 @@
 # Sprint 8 — Auditoria do motor relacional (`/auditoria-motor`)
 
 **Data:** 2026-09-21  
-**Parecer:** **motor seguro** para lançamento do MVP, com ressalvas operacionais (não bloqueantes).  
+**Parecer histórico Sprint 8:** motor seguro para lançamento.  
+**Atualização 2026-09-22 (MVP finalizado):** regras T1/postpartum explícitas; capabilities de postura em OR; ver `docs/mvp-finalizado.md` e migration `20260922180000_cycle_t1_postpartum_and_posture_capability_or.sql`. Reexecutar `npx tsx scripts/educador-exercise-safety-audit.ts` após mudanças de catálogo.  
 **Escopo:** `list_safe_exercises`, `list_safe_meals`, `tag_block_rules`, seeds publicados (~143 exercícios, ~99 refeições).
 
 ---

@@ -33,7 +33,10 @@ Não usar inteligência artificial generativa para montar treinos, dietas ou dia
 - Separação total entre dados públicos e dados sensíveis.
 
 ## Arquitetura do MVP
-Fonte da verdade do modelo de dados, motor de tags, onboarding e RLS: `docs/arquitetura-e-regras-de-negocio.md`.
+MVP **finalizado** (2026-09-22). Fonte da verdade do modelo de dados, motor de tags, onboarding e RLS: `docs/arquitetura-e-regras-de-negocio.md`.  
+Índice de fechamento: `docs/mvp-finalizado.md`. Ideias seguintes: `docs/roadmap-pos-mvp-e-sprints.md`.
+
+Trabalho novo é pós-MVP, salvo hotfix de segurança clínica ou LGPD.
 
 ## Como usar a squad
 Ative uma persona com `@` no arquivo da regra (ex.: `@01-gerente-de-tecnologia`) ou use um comando em `.cursor/commands/`.

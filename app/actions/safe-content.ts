@@ -238,6 +238,26 @@ export async function markContentDoneAction(
     return { ok: false, code: "invalid_content" };
   }
 
+  // Clinical gate: only allow IDs currently returned by the safety motor
+  // (same path as Mover/Comer UI). Prevents marking published-but-unsafe content.
+  if (kind === "workout") {
+    const safe = await listSafeExercisesForMeAction();
+    if (!safe.ok) {
+      return { ok: false, code: safe.code };
+    }
+    if (!safe.items.some((item) => item.id === contentId)) {
+      return { ok: false, code: "unsafe_content" };
+    }
+  } else {
+    const safe = await listSafeMealsForMeAction();
+    if (!safe.ok) {
+      return { ok: false, code: safe.code };
+    }
+    if (!safe.items.some((item) => item.id === contentId)) {
+      return { ok: false, code: "unsafe_content" };
+    }
+  }
+
   const day = todayInSaoPaulo();
   const { error } = await supabase.from("habit_logs").upsert(
     {

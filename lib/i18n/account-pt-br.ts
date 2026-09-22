@@ -1,6 +1,15 @@
 export const accountCopy = {
   title: "Conta",
   support: "Perfil público, cuidados de saúde editáveis, consentimentos e direitos sobre os dados.",
+  jumpNavLabel: "Ir para seção",
+  jump: {
+    profile: "Perfil",
+    health: "Saúde",
+    habits: "Hábitos",
+    cycle: "Ciclo",
+    data: "Dados e privacidade",
+  },
+  openProgress: "Ver progresso",
   loadError: "Não foi possível carregar a conta agora.",
   genericError: "Não foi possível concluir agora. Tente de novo.",
   saved: "Alterações salvas.",
@@ -15,7 +24,7 @@ export const accountCopy = {
   password: {
     title: "Senha de acesso",
     support:
-      "Defina ou altere a senha desta conta. Também confirma o e-mail no provedor — necessário para contas que começaram só com link mágico.",
+      "Defina ou altere a senha desta conta. Também confirma o e-mail — útil se o acesso começou só com link mágico.",
     newLabel: "Nova senha",
     confirmLabel: "Confirmar nova senha",
     placeholder: "Mínimo de 8 caracteres",
@@ -26,7 +35,7 @@ export const accountCopy = {
     mismatch: "As senhas não coincidem. Digite de novo.",
     updateError: "Não foi possível salvar a senha agora. Tente de novo.",
     envError:
-      "Falta configurar o arquivo .env com a URL e a chave anon do Supabase.",
+      "O acesso está temporariamente indisponível. Tente de novo em instantes.",
   },
   motor: {
     title: "Como o cuidado é escolhido",
@@ -117,6 +126,8 @@ export const accountCopy = {
     possiblePregnancyHint:
       "Troca o cuidado para modo gestação (1º trimestre) e adapta movimentos. Confirme com profissional de saúde.",
     remindersTitle: "Lembretes do ciclo",
+    remindersPrivacyHint:
+      "Se as notificações do aparelho estiverem ligadas, a tela bloqueada mostra só um aviso genérico. O detalhe aparece aqui no app.",
     remindPeriod: "Avisar quando a menstruação estiver próxima",
     remindFertile: "Avisar no início da janela fértil estimada",
     remindLate: "Avisar se o ciclo atrasar muito (cadastrar ou possível gestação)",
@@ -127,11 +138,26 @@ export const accountCopy = {
     legendLate: "Atraso",
     monthPrev: "Mês anterior",
     monthNext: "Próximo mês",
-    weekdays: ["D", "S", "T", "Q", "Q", "S", "S"] as const,
+    weekdays: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"] as const,
+    dayKindLabel: {
+      none: "sem marcação especial",
+      period: "menstruação",
+      fertile: "janela fértil estimada",
+      ovulation: "ovulação estimada",
+      "predicted-period": "próxima menstruação estimada",
+      late: "atraso estimado",
+      follicular: "fase folicular estimada",
+      luteal: "fase lútea estimada",
+    } as const,
+    dayAria: (day: number, kindLabel: string, isToday: boolean) =>
+      isToday
+        ? `Dia ${day}, hoje, ${kindLabel}`
+        : `Dia ${day}, ${kindLabel}`,
     disclaimer:
       "Estimativas educativas. Em dúvida clínica, procure atendimento de saúde.",
   },
   cycleAlerts: {
+    lockScreenBody: "Há um aviso do ciclo no Cuidado em Par. Abra o app para ver.",
     periodApproaching: (days: number) =>
       days === 1
         ? "A menstruação estimada fica a cerca de 1 dia."

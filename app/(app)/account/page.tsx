@@ -69,16 +69,57 @@ export default async function AccountPage() {
         </p>
       </div>
 
+      <nav
+        aria-label={accountCopy.jumpNavLabel}
+        className="flex flex-wrap gap-2"
+      >
+        <a
+          href="#account-profile"
+          className="focus-ring inline-flex min-h-10 items-center rounded-[var(--radius-pill)] bg-surface-raised px-3 text-sm font-semibold text-mint-deep"
+        >
+          {accountCopy.jump.profile}
+        </a>
+        {health ? (
+          <a
+            href="#account-health"
+            className="focus-ring inline-flex min-h-10 items-center rounded-[var(--radius-pill)] bg-surface-raised px-3 text-sm font-semibold text-mint-deep"
+          >
+            {accountCopy.jump.health}
+          </a>
+        ) : null}
+        {ritual ? (
+          <a
+            href="#habits-prefs"
+            className="focus-ring inline-flex min-h-10 items-center rounded-[var(--radius-pill)] bg-surface-raised px-3 text-sm font-semibold text-mint-deep"
+          >
+            {accountCopy.jump.habits}
+          </a>
+        ) : null}
+        <a
+          href="#cycle-calendar"
+          className="focus-ring inline-flex min-h-10 items-center rounded-[var(--radius-pill)] bg-surface-raised px-3 text-sm font-semibold text-mint-deep"
+        >
+          {accountCopy.jump.cycle}
+        </a>
+        <a
+          href="#account-data"
+          className="focus-ring inline-flex min-h-10 items-center rounded-[var(--radius-pill)] bg-surface-raised px-3 text-sm font-semibold text-mint-deep"
+        >
+          {accountCopy.jump.data}
+        </a>
+      </nav>
+
       {!data.hasAcceptedTerms ? (
         <InlineAlert tone="error">{accountCopy.consents.termsGate}</InlineAlert>
       ) : null}
 
-      <PublicProfileForm
-        displayName={data.profile.displayName}
-        genderIdentity={data.profile.genderIdentity}
-      />
-
-      <PasswordChangePanel />
+      <div id="account-profile" className="scroll-mt-4 space-y-4">
+        <PublicProfileForm
+          displayName={data.profile.displayName}
+          genderIdentity={data.profile.genderIdentity}
+        />
+        <PasswordChangePanel />
+      </div>
 
       <Surface className="space-y-2">
         <h2 className="text-xl font-semibold text-ink">
@@ -90,7 +131,11 @@ export default async function AccountPage() {
       </Surface>
 
       {health ? (
-        <section className="space-y-4" aria-labelledby="health-edit-heading">
+        <section
+          className="scroll-mt-4 space-y-4"
+          id="account-health"
+          aria-labelledby="health-edit-heading"
+        >
           <div className="space-y-2">
             <h2
               id="health-edit-heading"
@@ -117,7 +162,7 @@ export default async function AccountPage() {
       ) : null}
 
       {ritual ? (
-        <section className="space-y-4" id="habits-prefs">
+        <section className="scroll-mt-4 space-y-4" id="habits-prefs">
           <WorkoutAvailabilityForm initial={ritual.prefs} />
           <HabitPrefsForm initial={ritual.prefs} />
           <HabitRemindersOptIn
@@ -127,7 +172,7 @@ export default async function AccountPage() {
         </section>
       ) : null}
 
-      <div id="cycle-calendar">
+      <div id="cycle-calendar" className="scroll-mt-4">
         <CycleCalendarPanel
           snapshot={cycle}
           cycleMode={health?.cycleMode ?? null}
@@ -135,17 +180,17 @@ export default async function AccountPage() {
         />
       </div>
 
-      <ConsentsPanel consents={data.consents} />
-
-      <ExportDataPanel />
-
-      <InstallPwaPanel />
+      <div id="account-data" className="scroll-mt-4 space-y-6">
+        <ConsentsPanel consents={data.consents} />
+        <ExportDataPanel />
+        <InstallPwaPanel />
+      </div>
 
       <Link
         href="/progress"
         className="focus-ring inline-flex min-h-12 items-center justify-center text-base font-semibold text-mint-deep"
       >
-        Ver progresso
+        {accountCopy.openProgress}
       </Link>
 
       <div className="flex justify-center">

@@ -21,7 +21,7 @@ export function ChoiceCard({
 }: ChoiceCardProps) {
   return (
     <label
-      className={`focus-within:outline-none flex cursor-pointer items-start gap-3 rounded-[1.25rem] p-4 transition ${
+      className={`flex cursor-pointer items-start gap-3 rounded-[1.25rem] p-4 transition focus-within:outline focus-within:outline-[3px] focus-within:outline-offset-2 focus-within:outline-[var(--color-mint-deep)] ${
         selected
           ? "bg-mint text-ink shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-mint-deep)_40%,transparent)]"
           : "bg-surface text-ink shadow-[0_8px_24px_color-mix(in_srgb,var(--color-ink)_5%,transparent)]"

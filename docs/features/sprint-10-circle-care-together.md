@@ -1,8 +1,8 @@
 # Sprint 10 — Círculo com motivo: combinado, progresso em companhia e “hoje não consigo”
 
 Comando de origem: `/nova-feature`  
-Status: **implementado — aguarda migration + QA manual** (`docs/features/sprint-10-qa-checklist.md`).  
-Pré-existência: Sprint 7–8 círculo (pair/group), `care_events` agregados, sync a partir de `habit_logs`; Sprint 9 plano do dia/progresso; cartão “Apoio em par” na home ainda passivo; roadmap pós-MVP já cita combinados e “hoje não consigo”.
+Status: **fechada (MVP finalizado 2026-09-22)** — ver `docs/mvp-finalizado.md` e `docs/features/sprint-10-qa-checklist.md`.  
+Pré-existência: Sprint 7–8 círculo (pair/group), `care_events` agregados, sync a partir de `habit_logs`; Sprint 9 plano do dia/progresso.
 
 ---
 
@@ -348,6 +348,6 @@ Aceite PM 1–10 verdes; parecer LGPD sem bloqueio aberto; checklist sprint-10 f
 
 Plano coerente com produto aprovado.
 
-**Sugestão:** `/implementar` — Sprint 10 (combinado + progresso + `rest-day` + nudge).
+**Sugestão (histórico):** implementação concluída com o MVP. Novas ideias de círculo → pós-MVP no roadmap.
 
 Ordem de execução no implementar: migration → `lib/care/*` → sync → actions → UI Círculo → UI Hoje → copy → export → QA smoke.

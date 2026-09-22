@@ -1,9 +1,10 @@
 # Sprint 10 — QA checklist (círculo com motivo)
 
-Fonte: `docs/features/sprint-10-circle-care-together.md`
+Fonte: `docs/features/sprint-10-circle-care-together.md`  
+Status MVP: **fechada** (2026-09-22) — checklist abaixo permanece como regressão / smoke de staging.
 
 ## Pré-requisito
-- [ ] Migration `20260922160000_sprint10_circle_care_together.sql` aplicada
+- [ ] Migration `20260922160000_sprint10_circle_care_together.sql` aplicada (e demais até `20260922180000_*` se ainda não rodaram)
 
 ## Combinado e progresso
 - [ ] Default `weekly_care_goal = 3` em círculo existente

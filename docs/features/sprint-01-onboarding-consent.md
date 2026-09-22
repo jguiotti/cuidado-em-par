@@ -1,7 +1,7 @@
 # Sprint 1 — Consentimento e onboarding (passos 0–2)
 
 Comando de origem: `/nova-feature`  
-Status: **implementado** (ver código + `docs/features/sprint-01-qa-checklist.md`).
+Status: **fechada (MVP)** — ver código + `docs/features/sprint-01-qa-checklist.md`.
 Comando de origem: `/nova-feature` → `/implementar`
 
 ---

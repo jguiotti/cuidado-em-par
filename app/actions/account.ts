@@ -387,11 +387,13 @@ export async function exportMyDataAction(): Promise<
     habitPrefs,
     habitLogs,
     careNudges,
+    careMembership,
+    careEvents,
   ] = await Promise.all([
     supabase
       .from("user_profiles")
       .select(
-        "display_name, gender_identity, health_focus, onboarding_completed_at, created_at, updated_at",
+        "display_name, gender_identity, health_focus, onboarding_stage, onboarding_completed_at, created_at, updated_at",
       )
       .eq("id", user.id)
       .maybeSingle(),
@@ -402,12 +404,14 @@ export async function exportMyDataAction(): Promise<
       .order("recorded_at", { ascending: true }),
     supabase
       .from("user_clinical_conditions")
-      .select("condition_tags, capability_tags, updated_at")
+      .select(
+        "condition_tags, capability_tags, available_equipment_tags, sex_assigned_at_birth, updated_at",
+      )
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
       .from("user_nutrition_profiles")
-      .select("diet_pattern, avoids_tags, updated_at")
+      .select("diet_pattern, avoids_tags, disliked_foods, updated_at")
       .eq("user_id", user.id)
       .maybeSingle(),
     supabase
@@ -458,6 +462,16 @@ export async function exportMyDataAction(): Promise<
       .select("circle_id, from_user_id, to_user_id, day, created_at")
       .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
       .order("day", { ascending: true }),
+    supabase
+      .from("care_circle_members")
+      .select("circle_id, joined_at")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    supabase
+      .from("care_events")
+      .select("circle_id, day, kind, created_at")
+      .eq("user_id", user.id)
+      .order("day", { ascending: true }),
   ]);
 
   if (
@@ -472,7 +486,9 @@ export async function exportMyDataAction(): Promise<
     dailyPlans.error ||
     habitPrefs.error ||
     habitLogs.error ||
-    careNudges.error
+    careNudges.error ||
+    careMembership.error ||
+    careEvents.error
   ) {
     console.error("exportMyDataAction load failed");
     return { ok: false, code: "load_failed" };
@@ -497,6 +513,8 @@ export async function exportMyDataAction(): Promise<
     habit_prefs: habitPrefs.data,
     habit_logs: habitLogs.data ?? [],
     care_nudges: careNudges.data ?? [],
+    care_circle_membership: careMembership.data,
+    care_events: careEvents.data ?? [],
   };
 
   const filename = buildExportFilename();
@@ -517,12 +535,14 @@ export async function deleteMyAccountAction(input: {
     return { ok: false, code: "invalid_confirmation" };
   }
 
-  // Audit trail before Auth delete (cascade removes logs with the user).
-  await supabase.from("lgpd_consent_logs").insert({
-    user_id: user.id,
-    purpose: "terms",
-    accepted: false,
-  });
+  // Tombstone outside auth.users cascade (survives deleteUser).
+  const { error: auditError } = await supabase.rpc(
+    "record_own_account_deletion",
+  );
+  if (auditError) {
+    console.error("deleteMyAccountAction audit", auditError.message);
+    return { ok: false, code: "save_failed" };
+  }
 
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);

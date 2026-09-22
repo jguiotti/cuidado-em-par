@@ -61,7 +61,7 @@ export function BrandLogo({
           className="h-12 w-auto max-w-full object-contain object-left sm:h-14"
           priority
         />
-        <span className="text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-ink-soft">
+        <span className="text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
           {brandCopy.tagline}
         </span>
       </span>

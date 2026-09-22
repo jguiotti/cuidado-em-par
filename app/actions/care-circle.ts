@@ -140,20 +140,25 @@ export async function getMyCareCircleAction(): Promise<
   }
 
   const userIds = (memberRows ?? []).map((row) => row.user_id);
-  const { data: profiles, error: profilesError } = await supabase
-    .from("user_profiles")
-    .select("id, display_name")
-    .in("id", userIds);
+  const { data: profiles, error: profilesError } = await supabase.rpc(
+    "list_circle_member_display_names",
+    { p_user_ids: userIds },
+  );
 
   if (profilesError) {
     console.error("getMyCareCircleAction profiles", profilesError.message);
     return { ok: false, code: "load_failed" };
   }
 
+  const profileRows = (profiles ?? []) as Array<{
+    id: string;
+    display_name: string | null;
+  }>;
+
   const nameById = new Map(
-    (profiles ?? []).map((row) => [
-      row.id as string,
-      (row.display_name?.trim() || "pessoa") as string,
+    profileRows.map((row) => [
+      row.id,
+      row.display_name?.trim() || "pessoa",
     ]),
   );
 

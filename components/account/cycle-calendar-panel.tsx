@@ -234,23 +234,34 @@ export function CycleCalendarPanel({
           {accountCopy.cycle.weekdays.map((label, index) => (
             <span
               key={`${label}-${index}`}
+              role="columnheader"
               className="py-1 text-center text-xs font-semibold text-ink-soft"
             >
               {label}
             </span>
           ))}
           {Array.from({ length: firstWeekday }).map((_, index) => (
-            <span key={`pad-${index}`} aria-hidden />
+            <span key={`pad-${index}`} role="gridcell" aria-hidden />
           ))}
-          {cells.map((cell) => (
-            <span
-              key={cell.isoDate}
-              className={kindClass(cell.kind, cell.isoDate === today)}
-              title={cell.isoDate}
-            >
-              {Number(cell.isoDate.slice(8, 10))}
-            </span>
-          ))}
+          {cells.map((cell) => {
+            const dayNum = Number(cell.isoDate.slice(8, 10));
+            const isToday = cell.isoDate === today;
+            const kindLabel = accountCopy.cycle.dayKindLabel[cell.kind];
+            return (
+              <span
+                key={cell.isoDate}
+                role="gridcell"
+                className={kindClass(cell.kind, isToday)}
+                aria-label={accountCopy.cycle.dayAria(
+                  dayNum,
+                  kindLabel,
+                  isToday,
+                )}
+              >
+                {dayNum}
+              </span>
+            );
+          })}
         </div>
 
         <ul className="flex flex-wrap gap-3 text-xs text-ink-soft">
@@ -309,6 +320,9 @@ export function CycleCalendarPanel({
           <legend className="text-sm font-semibold text-ink">
             {accountCopy.cycle.remindersTitle}
           </legend>
+          <p className="text-sm leading-relaxed text-ink-soft">
+            {accountCopy.cycle.remindersPrivacyHint}
+          </p>
           <label className="flex cursor-pointer gap-3 text-sm leading-relaxed text-ink">
             <input
               type="checkbox"

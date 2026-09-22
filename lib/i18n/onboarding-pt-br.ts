@@ -137,7 +137,7 @@ export const onboardingCopy = {
     patternLegend: "Padrão alimentar",
     avoidsLegend: "Restrições, intolerâncias e alergias",
     avoidsHint:
-      "Pode adicionar várias. Ex.: glúten e lactose juntos, ou alergia a amendoim sendo vegana.",
+      "Pode adicionar várias. Ex.: glúten e lactose juntos, ou alergia a amendoim no padrão vegano.",
     searchLabel: "Buscar e adicionar restrição",
     searchPlaceholder: "Ex.: glúten, lactose, ovo, amendoim…",
     searchHint:
