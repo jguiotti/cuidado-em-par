@@ -110,13 +110,21 @@ SUPABASE_SERVICE_ROLE_KEY=sua_service_role_key_aqui
 
 ### Auth (Supabase)
 
-Em Authentication → URL configuration, inclua o redirect:
+Em **Authentication → URL Configuration**:
+
+1. **Site URL** = domínio da Vercel (ex.: `https://seu-app.vercel.app`), não `localhost`.
+2. **Redirect URLs** devem incluir produção **e** local, por exemplo:
 
 ```text
+https://seu-app.vercel.app/auth/callback
+https://seu-app.vercel.app/**
 http://localhost:3000/auth/callback
+http://localhost:3000/**
 ```
 
-Em produção, use a URL do deploy + `/auth/callback`.
+Se o redirect de produção não estiver na lista, o e-mail de confirmação/redefinição usa o Site URL e cai em `localhost`.
+
+Detalhes e templates: `docs/email-templates/README.md`.
 
 ### Papel de admin (backoffice)
 

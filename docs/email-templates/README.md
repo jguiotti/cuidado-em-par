@@ -37,14 +37,35 @@ node scripts/set-user-password.cjs seu@email.com "SenhaNova8"
 
 ## Site URL e Redirect
 
-Em **Authentication → URL Configuration**:
+Em **Authentication → URL Configuration** (Dashboard do Supabase):
 
-- **Site URL**: `http://localhost:3000` (local) ou a URL de produção
-- **Redirect URLs**:
-  - `http://localhost:3000/auth/callback`
-  - `http://localhost:3000/auth/update-password`
-  - `http://localhost:3000/**` (opcional)
-  - o equivalente em produção
+### Produção (obrigatório para e-mails não irem para localhost)
 
-O app usa `redirectTo` = `{origin}/auth/callback?next=/auth/update-password`.
-O callback troca o `code` (ou `token_hash`) pela sessão **gravando cookies na resposta** e só então abre a tela de senha nova.
+1. **Site URL** = URL pública do app na Vercel, **sem** barra no final  
+   Ex.: `https://cuidado-em-par.vercel.app` (use o domínio real do deploy).
+2. Em **Redirect URLs**, inclua **todas** estas linhas (uma por linha):
+
+```text
+https://SEU-DOMINIO.vercel.app/auth/callback
+https://SEU-DOMINIO.vercel.app/auth/callback/**
+https://SEU-DOMINIO.vercel.app/auth/update-password
+https://SEU-DOMINIO.vercel.app/**
+http://localhost:3000/auth/callback
+http://localhost:3000/auth/callback/**
+http://localhost:3000/auth/update-password
+http://localhost:3000/**
+```
+
+Troque `SEU-DOMINIO.vercel.app` pelo host real (incluindo domínio customizado, se houver).
+
+Se o redirect enviado pelo app **não** estiver nesta lista, o Supabase **ignora** e monta o link do e-mail com o **Site URL** (por isso aparece `localhost`).
+
+### Local
+
+Mantenha `http://localhost:3000/**` na lista para desenvolvimento.  
+O **Site URL** em projeto compartilhado de staging/prod deve ser a URL de **produção**, não localhost.
+
+O app envia `emailRedirectTo` / `redirectTo` = `{origin}/auth/callback?next=...`.  
+O callback troca o `code` (ou `token_hash`) pela sessão **gravando cookies na resposta** e só então abre a home ou a tela de senha nova.
+
+Depois de alterar Site URL / Redirect URLs, **peça um novo e-mail** (criar conta de novo ou reenviar confirmação). Links antigos no inbox continuam apontando para o destino antigo.
