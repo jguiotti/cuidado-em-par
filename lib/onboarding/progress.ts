@@ -81,7 +81,11 @@ export function resolveOnboardingStep(
     return "focus";
   }
 
-  if (input.onboardingStage && isOnboardingStage(input.onboardingStage)) {
+  if (
+    input.onboardingStage &&
+    isOnboardingStage(input.onboardingStage) &&
+    input.onboardingStage !== "completed"
+  ) {
     return input.onboardingStage;
   }
 

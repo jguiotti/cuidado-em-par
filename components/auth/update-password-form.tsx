@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { getPostAuthRedirectPathAction } from "@/app/actions/auth-redirect";
 import { IconArrowRight } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -62,7 +63,8 @@ export function UpdatePasswordForm() {
       }
 
       setMessage(loginCopy.resetPasswordSaved);
-      router.push("/home");
+      const path = await getPostAuthRedirectPathAction();
+      router.push(path);
       router.refresh();
     } catch (error) {
       setHasError(true);

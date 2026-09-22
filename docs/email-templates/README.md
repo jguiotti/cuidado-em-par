@@ -16,7 +16,22 @@ Arquivos prontos para colar no Dashboard:
    - Reset: `Redefina sua senha — Cuidado em Par`
 4. Salve e teste **Send test e-mail** no Dashboard, se existir.
 
-Os templates foram simplificados (sem imagem externa nem CSS avançado) para evitar **500** no endpoint `/recover` por falha ao renderizar o template.
+Os templates usam o logo em URL absoluta (`https://cuidadoempar.vercel.app/brand/logo-horizontal.png`) e cores fixas do santuário (areia, menta, blush) com `color-scheme: light only` para reduzir inversão no Gmail escuro.
+
+Depois de alterar o HTML no Dashboard, **envie um e-mail novo** (links antigos no inbox não mudam o layout).
+
+## Fluxo após confirmar
+
+O app envia `emailRedirectTo` = `{origin}/auth/callback?next=/auth/confirmed`.  
+Após o callback, a pessoa vê **E-mail confirmado**, CTA de cadastro/login e opção de instalar o PWA.
+
+### PWA e janela do Gmail (limite do sistema)
+
+Apps de e-mail (Gmail, Outlook) abrem o link em um **navegador embutido**. Não é possível forçar a abertura do PWA instalado nem disparar o prompt de instalação de forma confiável nessa janela. O que funciona:
+
+1. Na tela `/auth/confirmed`, oferecer instalar o atalho (quando o Chrome expõe `beforeinstallprompt`).
+2. Orientar **Abrir no Chrome / no navegador** pelo menu da janela do e-mail.
+3. Depois de instalado, abrir pelo ícone e **entrar** com a mesma conta (a confirmação do e-mail já valeu no servidor).
 
 ## SMTP com Resend (recomendado em produção)
 
@@ -104,6 +119,12 @@ Mantenha `http://localhost:3000/**` na lista para desenvolvimento.
 O **Site URL** em projeto compartilhado de staging/prod deve ser a URL de **produção**, não localhost.
 
 O app envia `emailRedirectTo` / `redirectTo` = `{origin}/auth/callback?next=...`.  
-O callback troca o `code` (ou `token_hash`) pela sessão **gravando cookies na resposta** e só então abre a home ou a tela de senha nova.
+O callback troca o `code` (ou `token_hash`) pela sessão **gravando cookies na resposta** e então abre `/auth/confirmed` (signup) ou `/auth/update-password` (recovery).
 
 Depois de alterar Site URL / Redirect URLs, **peça um novo e-mail** (criar conta de novo ou reenviar confirmação). Links antigos no inbox continuam apontando para o destino antigo.
+
+Inclua também na allowlist (opcional, o callback já redireciona):
+
+```text
+https://SEU-DOMINIO.vercel.app/auth/confirmed
+```

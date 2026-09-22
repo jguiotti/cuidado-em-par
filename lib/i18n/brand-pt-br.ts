@@ -102,3 +102,17 @@ export const loginCopy = {
   envError:
     "O acesso está temporariamente indisponível. Tente de novo em instantes.",
 } as const;
+
+export const emailConfirmedCopy = {
+  title: "E-mail confirmado",
+  supportLoggedIn:
+    "Sua conta está ativa. Continue o cadastro para personalizar o cuidado com segurança.",
+  supportLoggedOut:
+    "Seu e-mail foi confirmado. Entre com e-mail e senha para continuar o cadastro — se o app já estiver instalado, abra pelo ícone na tela inicial.",
+  continueCta: "Continuar cadastro",
+  loginCta: "Entrar para continuar",
+  installNote:
+    "O Gmail e outros apps de e-mail abrem o link em uma janela interna. Não dá para forçar a abertura direta do PWA. Instale o atalho abaixo ou abra o app instalado e entre com a mesma conta.",
+  openInBrowserHint:
+    "Se a janela do e-mail limitar a instalação: toque no menu e escolha Abrir no Chrome (ou no navegador).",
+} as const;

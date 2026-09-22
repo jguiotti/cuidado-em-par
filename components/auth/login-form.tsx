@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState, type FormEvent } from "react";
 
+import { getPostAuthRedirectPathAction } from "@/app/actions/auth-redirect";
 import { IconArrowRight, IconMail } from "@/components/brand/soft-icons";
 import { Button } from "@/components/ui/button";
 import { InlineAlert } from "@/components/ui/inline-alert";
@@ -190,7 +191,7 @@ export function LoginForm({ nextPath }: LoginFormProps) {
       const supabase = createClient();
 
       if (isSignUp) {
-        const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+        const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/auth/confirmed")}`;
         const { data, error } = await withTimeout(
           supabase.auth.signUp({
             email: trimmedEmail,
@@ -242,7 +243,13 @@ export function LoginForm({ nextPath }: LoginFormProps) {
         }
       }
 
-      router.push(nextPath);
+      const destination = await getPostAuthRedirectPathAction();
+      // Prefer onboarding when incomplete; honor nextPath only if already done.
+      const path =
+        destination === "/home" && nextPath.startsWith("/")
+          ? nextPath
+          : destination;
+      router.push(path);
       router.refresh();
     } catch (error) {
       if (error instanceof MissingEnvError) {
