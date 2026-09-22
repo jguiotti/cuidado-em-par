@@ -126,6 +126,20 @@ Se o redirect de produção não estiver na lista, o e-mail de confirmação/red
 
 Detalhes e templates: `docs/email-templates/README.md`.
 
+### E-mail (Resend SMTP)
+
+Em produção, use SMTP custom no Supabase com Resend (evita cota do mailer padrão):
+
+| Campo | Valor |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | API key Resend (`re_...`) |
+| Sender | e-mail de domínio **verificado** no Resend |
+
+A API key fica só no Dashboard do Supabase (SMTP), não no `.env` do Next.js.
+
 ### Papel de admin (backoffice)
 
 ```sql

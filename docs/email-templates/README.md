@@ -18,12 +18,50 @@ Arquivos prontos para colar no Dashboard:
 
 Os templates foram simplificados (sem imagem externa nem CSS avançado) para evitar **500** no endpoint `/recover` por falha ao renderizar o template.
 
+## SMTP com Resend (recomendado em produção)
+
+O e-mail padrão do Supabase tem cota baixa. Com Resend, confirmação e reset saem pelo seu provedor.
+
+### Pré-requisitos no Resend
+
+1. Conta em [resend.com](https://resend.com) e **API key** (`re_...`).
+2. **Domínio verificado** em Domains (DNS SPF/DKIM). Sem domínio verificado, o envio falha ou fica restrito.
+3. Remetente no formato `algo@seu-dominio.com` (ex.: `ola@forgeproductstudio.com` ou o domínio que você verificou).
+
+Não coloque a API key no `.env` do Next.js para Auth: o envio é feito pelo **servidor do Supabase** via SMTP.
+
+### Configurar no Supabase
+
+1. Dashboard → **Authentication → Emails** (ou **Project Settings → Authentication**).
+2. Abra **SMTP Settings** e ative **Enable custom SMTP**.
+3. Preencha:
+
+| Campo | Valor |
+| --- | --- |
+| Sender email | `ola@seu-dominio-verificado.com` |
+| Sender name | `Cuidado em Par` |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | a **API key** do Resend (`re_...`) |
+
+4. Salve.
+5. Em **Authentication → Rate Limits**, suba o limite de e-mails/hora se ainda estiver em 30 (teto inicial após SMTP custom).
+6. Teste: crie uma conta nova ou use “Esqueci a senha” com um e-mail real.
+
+Documentação Resend: [Send with Supabase SMTP](https://resend.com/docs/send-with-supabase-smtp).
+
+### Alternativa: integração Resend ↔ Supabase
+
+No painel Resend → **Integrations** → Connect to Supabase, dá para configurar SMTP com assistente. O resultado é o mesmo (Auth passa a usar Resend).
+
 ## Se `/recover` retornar 500
 
 1. Cole de novo `reset-password.html` (versão simplificada).
 2. Confira **Authentication → Logs** (erro de SMTP ou template).
-3. Cota diária de e-mail do plano gratuito esgotada também pode falhar o envio.
-4. Enquanto o e-mail estiver quebrado, defina a senha **sem e-mail**:
+3. Sem SMTP custom: cota diária do plano gratuito do Supabase.
+4. Com Resend: domínio não verificado, remetente inválido ou API key errada.
+5. Enquanto o e-mail estiver quebrado, defina a senha **sem e-mail**:
 
 ```bash
 node scripts/set-user-password.cjs seu@email.com "SenhaNova8"
